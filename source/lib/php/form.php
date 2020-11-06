@@ -11,7 +11,9 @@
 /*
  * type 0 => string
  * type 1 => numeric
+ * type 2 => numeric_select
  * type 3 => bool
+ * type 4 => file
  * */
 
 
@@ -324,9 +326,9 @@ class makeform
             } elseif ($_GET['action'] == "addquery" && $this->alow_add == true) {
                 $db = new database();
                 for ($i = 0; $i < sizeof($this->formname); $i++) {
-                    if ($this->formreq[$i] == 1 && isset($_POST[$this->formname[$i]]) == false && $this->formtype[$i] != 4) {
+                    if ($this->formreq[$i] == 1 && (isset($_POST[$this->formname[$i]]) == false || $_POST[$this->formname[$i]] == "") && $this->formtype[$i] != 4) {
                         $msg = new message();
-                        $msg->msgb("لطفا مقدار" . $this->formtitle[$i] . " را وارد نمایید...");
+                        $msg->msgb("لطفا ورودی" . $this->formtitle[$i] . " را وارد نمایید...");
                         die();
                     } else {
                         //echo($this->formtitle[$i] . " = " . $_POST[$this->formname[$i]]);
@@ -361,8 +363,16 @@ class makeform
                         }
 
                     } elseif ($this->formtype[$i] == 1) {
-                        $db->addtoparam($this->formname[$i], $this->sqlint($_POST[$this->formname[$i]]));
-                        $thisvar = $this->sqlint($_POST[$this->formname[$i]]);
+                        $thisplcvar = $this->sqlint($_POST[$this->formname[$i]]);
+
+                        if ($this->formreq[$i] != 1 && (isset($_POST[$this->formname[$i]]) == false || $_POST[$this->formname[$i]] == "") && $this->formtype[$i] != 4) {
+                            echo("hi");
+                            $thisplcvar = 0;
+                        }
+                        $db->addtoparam($this->formname[$i], $thisplcvar);
+                        //$db->addtoparam($this->formname[$i], $this->sqlint($_POST[$this->formname[$i]]));
+                        //$thisvar = $this->sqlint($_POST[$this->formname[$i]]);
+                        $thisvar = $thisplcvar;
                         for ($j = 0; $j < sizeof($this->not_in_name); $j++) {
                             if ($this->formname[$i] == $this->not_in_name[$j]) {
                                 $sqlcheck = "select * from `" . $this->not_in_table[$this->not_in_name[$j]] . "` where `" . $this->not_in_fild[$this->not_in_name[$j]] . "`=$thisvar";
@@ -486,7 +496,17 @@ class makeform
                     }
 
                 }
-
+                for ($i = 0; $i < sizeof($this->int_var_arr); $i++) {
+                    if ($this->int_for_add == true) {
+                        $db->addtoparam($this->int_var_arr[$i], $this->int_val_arr[$i]);
+                    }
+                }
+                for ($i = 0; $i < sizeof($this->str_var_arr); $i++) {
+                    if ($this->str_for_add == true) {
+                        $thisval = "'" . $this->str_val_arr[$i] . "'";
+                        $db->addtoparam($this->str_var_arr[$i], $thisval);
+                    }
+                }
 
                 $db->addquery($this->settable, $this->after_add_url);
             } elseif ($_GET['action'] == "show" && $this->alow_visit == true) {
@@ -636,9 +656,10 @@ class makeform
             } elseif ($_GET['action'] == "editquery" && $this->alow_edit == true) {
                 $db = new database();
                 for ($i = 0; $i < sizeof($this->formname); $i++) {
+
                     if ($this->formreq[$i] == 1 && isset($_POST[$this->formname[$i]]) == false && $this->formtype[$i] != 4) {
                         $msg = new message();
-                        $msg->msgb("لطفا مقدار" . $this->formtitle[$i] . " را وارد نمایید...");
+                        $msg->msgb("لطفا ورودی" . $this->formtitle[$i] . " را وارد نمایید...");
                         die();
                     } else {
                     }
@@ -670,7 +691,12 @@ class makeform
                             }
                         }
                     } elseif ($this->formtype[$i] == 1) {
-                        $db->addtoedit($this->formname[$i], $this->sqlint($_POST[$this->formname[$i]]));
+                        $thisplcvar = $this->sqlint($_POST[$this->formname[$i]]);
+
+                        if ($this->formreq[$i] != 1 && (isset($_POST[$this->formname[$i]]) == false || $_POST[$this->formname[$i]] == "") && $this->formtype[$i] != 4) {
+                            $thisplcvar = 0;
+                        }
+                        $db->addtoedit($this->formname[$i], $thisplcvar);
                         $thisvar = $this->sqlint($_POST[$this->formname[$i]]);
                         for ($j = 0; $j < sizeof($this->not_in_name); $j++) {
                             if ($this->formname[$i] == $this->not_in_name[$j]) {
@@ -784,6 +810,19 @@ class makeform
                         }
                     }
                 }
+
+                for ($i = 0; $i < sizeof($this->int_var_arr); $i++) {
+                    if ($this->int_for_add == true) {
+                        $db->addtoedit($this->int_var_arr[$i], $this->int_val_arr[$i]);
+                    }
+                }
+                for ($i = 0; $i < sizeof($this->str_var_arr); $i++) {
+                    if ($this->str_for_add == true) {
+                        $thisval = "'" . $this->str_val_arr[$i] . "'";
+                        $db->addtoedit($this->str_var_arr[$i], $thisval);
+                    }
+                }
+
                 $keyval = "";
                 if ($this->setkey_type == 0) {
                     $keyval = "'" . $this->sqlstr($_GET[$this->setkey]) . "'";
@@ -898,6 +937,8 @@ class makeform
             die();
         }
         $out = str_replace("'", "&#" . ord("'") . ";", $out);
+        $out = str_replace("*", "&#" . ord("*") . ";", $out);
+        $out = str_replace(",", "&#" . ord(",") . ";", $out);
         $out = str_replace('"', "&#" . ord('"') . ";", $out);
         $out = str_replace("&", "&#" . ord("&") . ";", $out);
         $out = str_replace("%", "&#" . ord("%") . ";", $out);
@@ -925,49 +966,84 @@ class makeform
         }
     }
 
+    public $int_val_arr = [];
+    public $int_var_arr = [];
+    public $int_for_add = [];
+    public $int_for_edit = [];
+
+    public function set_int_val($varname, $val, $for_add = true, $for_edit = true)
+    {
+        $this->int_var_arr[sizeof($this->int_var_arr)] = $varname;
+        $this->int_val_arr[sizeof($this->int_val_arr)] = $val;
+        $this->int_for_add[sizeof($this->int_for_add)] = $for_add;
+        $this->int_for_edit[sizeof($this->int_for_edit)] = $for_edit;
+    }
+
+    public $str_val_arr = [];
+    public $str_var_arr = [];
+    public $str_for_add = [];
+    public $str_for_edit = [];
+
+    public function set_str_val($varname, $val, $for_add = true, $for_edit = true)
+    {
+        $this->str_var_arr[sizeof($this->str_var_arr)] = $varname;
+        $this->str_val_arr[sizeof($this->str_val_arr)] = $val;
+        $this->str_for_add[sizeof($this->str_for_add)] = $for_add;
+        $this->str_for_edit[sizeof($this->str_for_edit)] = $for_edit;
+    }
+
+    public function fast_number_input($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0)
+    {
+        if ($inpid == "") {
+            $inpid = $inpname;
+        }
+        $this->label($lbl, "w3-text-green")
+            ->input()
+            ->inptype("number")
+            ->inpname($inpname)
+            ->inpid($inpid)
+            ->inpclasses("w3-input w3-border")
+            ->end()
+            ->sndform($inpname, 1, $req, $lbl, $show_in_tbl, $filter);
+    }
+
+    public function fast_string_input($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0)
+    {
+        if ($inpid == "") {
+            $inpid = $inpname;
+        }
+        $this->label($lbl, "w3-text-green")
+            ->input()
+            ->inptype("text")
+            ->inpname($inpname)
+            ->inpid($inpid)
+            ->inpclasses("w3-input w3-border")
+            ->end()
+            ->sndform($inpname, 0, $req, $lbl, $show_in_tbl, $filter);
+    }
+
+    public function fast_textarea($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0)
+    {
+        if ($inpid == "") {
+            $inpid = $inpname;
+        }
+        $this->label($lbl, "w3-text-green")
+            ->texarea()
+            ->areaname($inpname)
+            ->areaid($inpid)
+            ->areaclasses("w3-input w3-border")
+            ->end()
+            ->sndform($inpname, 0, $req, $lbl, $show_in_tbl, $filter);
+    }
+
+    public function submit()
+    {
+        $this->input()
+            ->inptype("submit")
+            ->inpval("ثبت")
+            ->inpclasses("w3-btn w3-green w3-margin w3-round")
+            ->end();
+    }
 }
 
-/*
-$fm = new makeform();
-$fm->set_tbl_key("tbl1", "id", 1);
-$fm->input()->inpname("user")->inptype("text")->end()->sndform("user", 0, 1, "نام کاربر", 1);
-$fm->input()->inptype("password")->inpname("pass")->end()->sndform("pass", 0, 1, "کلمه عبور", 1);
-$fm->input()->inptype("number")->inpname("age")->end()->sndform("age", 1, 0, "سن", 1);
-$fm->select()->selectname("city_id")->selectaddval(0, "mashhad", 0)->selectaddval(1, "birjand", 0)->end()->sndform("city_id", 1, 1, "شهر", 0);
-$fm->texarea()->areaname("address")->end()->sndform("address", 0, 0, "ادرس", 0);
-$fm->input()->inptype("submit")->inpval("ثبت")->end();
-$fm->addform()->end()->show();
-
-/*$fm = new makeform();
-$fm->select()->selectdb('tbl1', 'user', 'id')->end()->show();*/
-
-/*$fm = new makeform();
-$fm->label("test lable:")
-    ->input()
-    ->inptype("text")
-    ->inpname("tname")
-    ->inpid("tid")
-    ->inpval("hi")
-    ->inpplaceholder("text")
-    ->inpclasses("w3-form")
-    ->end()
-    ->texarea()
-    ->areaclasses("w3-form")
-    ->areaid("areaid")
-    ->areaname("areaname")
-    ->areaval("areaval")
-    ->end()
-    ->select()
-    ->selectid("selid")
-    ->selectname("selname")
-    ->selectclasses("w3-select")
-    ->selectaddval("0", "بی مقدار", "0")
-    ->selectaddval("1", "مقدار 1", "1")
-    ->end()
-    ->input()
-    ->inptype("submit")
-    ->inpval("add")
-    ->end()
-    ->addform()
-    ->show();*/
 ?>
