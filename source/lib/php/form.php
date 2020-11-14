@@ -91,6 +91,12 @@ class makeform
         return $this;
     }
 
+    public function select_onchange($vall)
+    {
+        $this->maked = str_replace('<select ', '<select onchange="' . $vall . '" ', $this->maked);
+        return $this;
+    }
+
     public function onclick($vall)
     {
         $this->maked = str_replace('<input ', '<input onclick="' . $vall . '" ', $this->maked);
@@ -174,10 +180,10 @@ class makeform
         return $this;
     }
 
-    public function selectdb($table, $fild_title, $fild_value, $selectedval = "")
+    public function selectdb($table, $fild_title, $fild_value, $selectedval = "", $where = "")
     {
         $db = new database();
-        $sql = "select * from `$table`";
+        $sql = "select * from `$table` $where";
         $db->connect()->query($sql);
         while ($fild = mysqli_fetch_assoc($db->res)) {
             $selected = 0;
@@ -456,6 +462,7 @@ class makeform
                             }
                         }
                     } elseif ($this->formtype[$i] == 4) {
+
                         $msg = new message();
                         if ($_FILES[$this->formname[$i]]['size'] == 0 && $this->formreq[$i] == 1) {
                             $msg->msgb("لطفا " . $this->formtitle[$i] . " را وارد نمایید.");
@@ -486,8 +493,12 @@ class makeform
                                 die();
                             }
                         } else {
-                            $msg->msgb("فرمت فایل " . $this->formtitle[$i] . " پشتیبانی نمی شود.");
-                            die();
+                            if ($_FILES[$this->formname[$i]]['type'] == "" && $this->formreq[$i] == 0) {
+
+                            } else {
+                                $msg->msgb("فرمت فایل " . $this->formtitle[$i] . " پشتیبانی نمی شود.");
+                                die();
+                            }
                         }
                         /*} else if ($this->formreq[$i] == true) {
                             $msg->msgb("لطفا " . $this->formtitle[$i] . " را وارد نمایید.");
@@ -647,7 +658,7 @@ class makeform
                         document.getElementsByName('" . $this->formname[$i] . "')[0].value='" . $fild[$this->formname[$i]] . "';
                     }" . PHP_EOL;
                     $fl = new filemg();
-                    if ($this->form_action == "") {
+                    if ($this->form_action == "?action=addquery") {
                         $resscript .= "document.getElementsByTagName('form')[0].action='" . $fl->getfilename() . "?action=editquery&" . $this->setkey . "=" . $setval . "';";
                     }
                 }
@@ -1020,6 +1031,20 @@ class makeform
             ->inpclasses("w3-input w3-border")
             ->end()
             ->sndform($inpname, 0, $req, $lbl, $show_in_tbl, $filter);
+    }
+    public function fast_password_input($lbl, $inpname, $inpid = "")
+    {
+        if ($inpid == "") {
+            $inpid = $inpname;
+        }
+        $this->label($lbl, "w3-text-green")
+            ->input()
+            ->inptype("password")
+            ->inpname($inpname)
+            ->inpid($inpid)
+            ->inpclasses("w3-input w3-border")
+            ->end()
+            ->sndform($inpname, 0, 1, $lbl);
     }
 
     public function fast_textarea($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0)

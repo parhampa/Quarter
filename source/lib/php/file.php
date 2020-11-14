@@ -9,9 +9,10 @@ class filemg
 {
     public function getfilename()
     {
-        $directory = str_replace("/", "\\", $_SERVER['SCRIPT_FILENAME']);
+        /*$directory = str_replace("/", "\\", $_SERVER['SCRIPT_FILENAME']);
         $cfile = str_replace(getcwd(), "", $directory);
-        $cfile = str_replace("\\", "", $cfile);
+        $cfile = str_replace("\\", "", $cfile);*/
+        $cfile=basename($_SERVER['SCRIPT_NAME']);
         return $cfile;
     }
 }
