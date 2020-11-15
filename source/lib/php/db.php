@@ -68,7 +68,7 @@ class database
 
     public function deletequery($tbl, $key, $val, $after_delete_url = "")
     {
-        $sql = "delete from `$tbl` where `$key`='$val'";
+        $sql = "delete from `$tbl` where `$key`=$val";
         $this->connect()->query($sql);
         $fl = new filemg();
         $msg = new message();
