@@ -303,6 +303,8 @@ class makeform
     public $after_edit_url = "";
     public $after_delete_url = "";
 
+    public $option_td_include = "";
+
     public function show()
     {
         //var_dump($this->selectvals);
@@ -613,6 +615,9 @@ class makeform
                     if ($this->alow_del == true) {
                         $restbl .= " <a href='" . $fl->getfilename() . "?action=deletequery&" . $this->setkey . "=" . $fild[$this->setkey] . "'><input type='button' value='حذف' class='w3-btn w3-red w3-round'></a> ";
                     }
+                    if ($this->option_td_include != "") {
+                        include($this->option_td_include);
+                    }
                     $restbl .= "</td>";
                     $restbl .= "</tr>";
                 }
@@ -658,7 +663,7 @@ class makeform
                         document.getElementsByName('" . $this->formname[$i] . "')[0].value='" . $fild[$this->formname[$i]] . "';
                     }" . PHP_EOL;
                     $fl = new filemg();
-                    if ($this->form_action == "?action=addquery") {
+                    if (is_numeric(strpos($this->form_action, "action=addquery")) == true) {
                         $resscript .= "document.getElementsByTagName('form')[0].action='" . $fl->getfilename() . "?action=editquery&" . $this->setkey . "=" . $setval . "';";
                     }
                 }
@@ -1032,6 +1037,7 @@ class makeform
             ->end()
             ->sndform($inpname, 0, $req, $lbl, $show_in_tbl, $filter);
     }
+
     public function fast_password_input($lbl, $inpname, $inpid = "")
     {
         if ($inpid == "") {

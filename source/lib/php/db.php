@@ -66,13 +66,17 @@ class database
         return $this;
     }
 
-    public function deletequery($tbl, $key, $val)
+    public function deletequery($tbl, $key, $val, $after_delete_url = "")
     {
         $sql = "delete from `$tbl` where `$key`='$val'";
         $this->connect()->query($sql);
         $fl = new filemg();
         $msg = new message();
-        $msg->msg("عملیات با موفقیت انجام شد.", $fl->getfilename() . "?action=show");
+        if ($after_delete_url == "") {
+            $msg->msg("عملیات با موفقیت انجام شد.", $fl->getfilename() . "?action=show");
+        } else {
+            $msg->msg("عملیات با موفقیت انجام شد.", $after_delete_url);
+        }
         //echo("عملیات با موفقیت انجام شد.");
         return $this;
     }
@@ -93,9 +97,7 @@ class database
     {
         if ($where == "") {
             $sql = "update `$table` set $this->editparam where `$key`=$val";
-        }
-        else
-        {
+        } else {
             $sql = "update `$table` set $this->editparam $where";
         }
         $this->connect()->query($sql);
