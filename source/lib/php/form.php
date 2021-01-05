@@ -275,6 +275,14 @@ class makeform
         return $this;
     }
 
+    public $delwhere = "";
+
+    public function deletewhere($where)
+    {
+        $this->delwhere = " and " . $where;
+        return;
+    }
+
     public $not_in_name = [];
     public $not_in_table = [];
     public $not_in_fild = [];
@@ -336,7 +344,7 @@ class makeform
                 for ($i = 0; $i < sizeof($this->formname); $i++) {
                     if ($this->formreq[$i] == 1 && (isset($_POST[$this->formname[$i]]) == false || $_POST[$this->formname[$i]] == "") && $this->formtype[$i] != 4) {
                         $msg = new message();
-                        $msg->msgb("لطفا ورودی" . $this->formtitle[$i] . " را وارد نمایید...");
+                        $msg->msgb(" لطفا ورودی " . $this->formtitle[$i] . " را وارد نمایید...");
                         die();
                     } else {
                         //echo($this->formtitle[$i] . " = " . $_POST[$this->formname[$i]]);
@@ -644,38 +652,40 @@ class makeform
                     }
                 }
 
-                $sql = "select * from `$this->settable` where `$this->setkey`='$setval'";
+                $sql = "select * from `$this->settable` where `$this->setkey`='$setval' $this->where_edit";
                 $db = new database();
                 $db->connect()->query($sql);
-                $fild = mysqli_fetch_assoc($db->res);
-                $resscript = "<script>" . PHP_EOL;
-                for ($i = 0; $i < sizeof($this->formname); $i++) {
-                    $resscript .= "if(document.getElementsByName('" . $this->formname[$i] . "')[0].tagName=='INPUT' && document.getElementsByName('" . $this->formname[$i] . "')[0].type!='file'){
-                        document.getElementsByName('" . $this->formname[$i] . "')[0].value='" . $fild[$this->formname[$i]] . "';
+                if (mysqli_num_rows($db->res) > 0) {
+                    $fild = mysqli_fetch_assoc($db->res);
+                    $resscript = "<script>" . PHP_EOL;
+                    for ($i = 0; $i < sizeof($this->formname); $i++) {
+                        $resscript .= "if(document.getElementsByName(" . '"' . $this->formname[$i] . '"' . ")[0].tagName=='INPUT' && document.getElementsByName(" . '"' . $this->formname[$i] . '"' . ")[0].type!='file'){
+                        document.getElementsByName(" . '"' . $this->formname[$i] . '"' . ")[0].value=" . '"' . preg_replace('/\s\s+/', " ", $fild[$this->formname[$i]] . '"') . ";
                     }" . PHP_EOL;
-                    $resscript .= "if(document.getElementsByName('" . $this->formname[$i] . "')[0].tagName=='INPUT' && document.getElementsByName('" . $this->formname[$i] . "')[0].type=='file'){
-                        document.getElementById('imgfm" . $this->formname[$i] . "').src='" . $fild[$this->formname[$i]] . "';
+                        $resscript .= "if(document.getElementsByName('" . $this->formname[$i] . "')[0].tagName=='INPUT' && document.getElementsByName('" . $this->formname[$i] . "')[0].type=='file'){
+                        document.getElementById('imgfm" . $this->formname[$i] . "').src='" . preg_replace('/\s\s+/', " ", $fild[$this->formname[$i]]) . "';
                     }" . PHP_EOL;
-                    $resscript .= "if(document.getElementsByName('" . $this->formname[$i] . "')[0].tagName=='TEXTAREA'){
-                        document.getElementsByName('" . $this->formname[$i] . "')[0].value='" . $fild[$this->formname[$i]] . "';
+                        $resscript .= "if(document.getElementsByName('" . $this->formname[$i] . "')[0].tagName=='TEXTAREA'){
+                        document.getElementsByName('" . $this->formname[$i] . "')[0].value=" . '"' . preg_replace('/\s\s+/', '"' . "+" . "'\\n'" . "+" . '"', $fild[$this->formname[$i]]) . '"' . ";
                     }" . PHP_EOL;
-                    $resscript .= "if(document.getElementsByName('" . $this->formname[$i] . "')[0].tagName=='SELECT'){
-                        document.getElementsByName('" . $this->formname[$i] . "')[0].value='" . $fild[$this->formname[$i]] . "';
+                        $resscript .= "if(document.getElementsByName('" . $this->formname[$i] . "')[0].tagName=='SELECT'){
+                        document.getElementsByName('" . $this->formname[$i] . "')[0].value=" . '"' . preg_replace('/\s\s+/', " ", $fild[$this->formname[$i]]) . '"' . ";
                     }" . PHP_EOL;
-                    $fl = new filemg();
-                    if (is_numeric(strpos($this->form_action, "action=addquery")) == true) {
-                        $resscript .= "document.getElementsByTagName('form')[0].action='" . $fl->getfilename() . "?action=editquery&" . $this->setkey . "=" . $setval . "';";
+                        $fl = new filemg();
+                        if (is_numeric(strpos($this->form_action, "action=addquery")) == true) {
+                            $resscript .= "document.getElementsByTagName('form')[0].action='" . $fl->getfilename() . "?action=editquery&" . $this->setkey . "=" . $setval . "';";
+                        }
                     }
+                    $resscript .= "</script>";
+                    echo($resscript);
                 }
-                $resscript .= "</script>";
-                echo($resscript);
             } elseif ($_GET['action'] == "editquery" && $this->alow_edit == true) {
                 $db = new database();
                 for ($i = 0; $i < sizeof($this->formname); $i++) {
 
                     if ($this->formreq[$i] == 1 && isset($_POST[$this->formname[$i]]) == false && $this->formtype[$i] != 4) {
                         $msg = new message();
-                        $msg->msgb("لطفا ورودی" . $this->formtitle[$i] . " را وارد نمایید...");
+                        $msg->msgb("لطفا ورودی " . $this->formtitle[$i] . " را وارد نمایید...");
                         die();
                     } else {
                     }
@@ -850,7 +860,7 @@ class makeform
                         die();
                     }
                 }
-                $db->update($this->settable, $this->setkey, $keyval, $this->after_edit_url);
+                $db->update($this->settable, $this->setkey, $keyval, $this->after_edit_url, $this->where_edit);
             } elseif ($_GET['action'] == "deletequery" && $this->alow_del == true) {
                 $db = new database();
                 if (isset($_GET[$this->setkey]) == false) {
@@ -862,7 +872,7 @@ class makeform
                 } elseif ($this->setkey_type == 1) {
                     $id = $this->sqlint($id);
                 }
-                $db->deletequery($this->settable, $this->setkey, $id, $this->after_delete_url);
+                $db->deletequery($this->settable, $this->setkey, $id, $this->after_delete_url, $this->delwhere);
             }
         }
     }
@@ -920,7 +930,11 @@ class makeform
                     $db = new database();
                     $disfild = $this->formname[$i];
                     $db_table = $this->settable;
-                    $sql = "select DISTINCT(`$disfild`) from `$db_table` ";
+                    if ($this->wheresql != "") {
+                        $sql = "select DISTINCT(`$disfild`) from `$db_table` where $this->wheresql";
+                    } else {
+                        $sql = "select DISTINCT(`$disfild`) from `$db_table`";
+                    }
                     $db->connect()->query($sql);
                     $fm->selectaddval("", "انتخاب مقدار");
                     while ($fild = mysqli_fetch_assoc(($db->res))) {

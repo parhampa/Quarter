@@ -66,9 +66,10 @@ class database
         return $this;
     }
 
-    public function deletequery($tbl, $key, $val, $after_delete_url = "")
+    public function deletequery($tbl, $key, $val, $after_delete_url = "", $delwhere = "")
     {
-        $sql = "delete from `$tbl` where `$key`=$val";
+
+        $sql = "delete from `$tbl` where `$key`=$val $delwhere";
         $this->connect()->query($sql);
         $fl = new filemg();
         $msg = new message();
@@ -98,8 +99,10 @@ class database
         if ($where == "") {
             $sql = "update `$table` set $this->editparam where `$key`=$val";
         } else {
-            $sql = "update `$table` set $this->editparam $where";
+            $sql = "update `$table` set $this->editparam where `$key`=$val $where";
+            //$sql = "update `$table` set $this->editparam $where";
         }
+        //die($sql);
         $this->connect()->query($sql);
         $msg = new message();
         $fl = new filemg();
