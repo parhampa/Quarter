@@ -109,6 +109,56 @@ class makeform
         return $this;
     }
 
+    public function onkeydown($vall)
+    {
+        $this->maked = str_replace('<input ', '<input onkeydown="' . $vall . '" ', $this->maked);
+        return $this;
+    }
+
+    public function onkeyup($vall)
+    {
+        $this->maked = str_replace('<input ', '<input onkeyup="' . $vall . '" ', $this->maked);
+        return $this;
+    }
+
+    public function textmask($vall)
+    {
+        $this->maked = str_replace('<input ', '<input data-inputmask-mask="' . $vall . '" ', $this->maked);
+        return $this;
+    }
+
+    ///////////////////////////date input
+    public function dateinput($name, $title, $req = 0, $show_in_tbl = 0, $filter = 0)
+    {
+        $this->input()
+            ->inptype("hidden")
+            ->inpname($name)
+            ->inpid($name)
+            ->end()
+            ->sndform($name, 5, $req, $title, $show_in_tbl, $filter);
+        $this->label($title, "w3-text-green")
+            ->input()
+            ->inptype("text")
+            ->inpname("ta" . $name)
+            ->inpid("ta" . $name)
+            ->onchange("shamsibemiladi('" . $name . "')")
+            ->onkeypress("shamsibemiladi('" . $name . "')")
+            ->onkeydown("shamsibemiladi('" . $name . "')")
+            ->onkeyup("shamsibemiladi('" . $name . "')")
+            ->inpclasses("w3-input w3-border ta" . $name)
+            ->end();
+        //$this->all .= '<img id="btnta' . $name . '" src="../lib/js/cal/cal.png" style="vertical-align: top; float:left;" />';
+        $this->all .= '<script type="text/javascript">
+        Calendar.setup({
+            inputField     :    "ta' . $name . '",  
+            button         :    "ta' . $name . '",   
+               ifFormat       :    "%Y-%m-%d",
+               dateType	   :	"jalali",
+               weekNumbers    : false
+        });
+    </script>';
+    }
+
     //////////////////////////textarea
     public function texarea()
     {
@@ -377,12 +427,10 @@ class makeform
                                 }
                             }
                         }
-
                     } elseif ($this->formtype[$i] == 1) {
                         $thisplcvar = $this->sqlint($_POST[$this->formname[$i]]);
 
                         if ($this->formreq[$i] != 1 && (isset($_POST[$this->formname[$i]]) == false || $_POST[$this->formname[$i]] == "") && $this->formtype[$i] != 4) {
-                            echo("hi");
                             $thisplcvar = 0;
                         }
                         $db->addtoparam($this->formname[$i], $thisplcvar);
@@ -504,7 +552,6 @@ class makeform
                             }
                         } else {
                             if ($_FILES[$this->formname[$i]]['type'] == "" && $this->formreq[$i] == 0) {
-
                             } else {
                                 $msg->msgb("فرمت فایل " . $this->formtitle[$i] . " پشتیبانی نمی شود.");
                                 die();
@@ -514,8 +561,25 @@ class makeform
                             $msg->msgb("لطفا " . $this->formtitle[$i] . " را وارد نمایید.");
                             die();
                         }*/
-                    }
+                    } elseif ($this->formtype[$i] == 5) {
+                        $msg = new message();
+                        $thisvar = $this->sqlstr($_POST[$this->formname[$i]]);
+                        if (strlen($thisvar) != 10) {
+                            $msg->msgb("اشکال در ورودی " . $this->formtitle[$i]);
+                            die();
+                        }
+                        $tmptst = str_replace("-", "", $thisvar);
+                        if (strlen($tmptst) != 8) {
+                            $msg->msgb("اشکال در ورودی " . $this->formtitle[$i]);
+                            die();
+                        }
+                        $tmptst = $this->sqlint($tmptst);
+                        $d = strtotime($thisvar);
+                        $d = date("Y-m-d", $d);
+                        $thisvar = "'$d'";
+                        $db->addtoparam($this->formname[$i], $thisvar);
 
+                    }
                 }
                 for ($i = 0; $i < sizeof($this->int_var_arr); $i++) {
                     if ($this->int_for_add == true) {
@@ -553,8 +617,7 @@ class makeform
                 }
                 if ($have_filter > 0) {
                     ?>
-                    <input type="button" class="w3-btn w3-orange w3-round" value="فیلترینگ!"
-                           onclick="hidefilter();">
+                    <input type="button" class="w3-btn w3-orange w3-round" value="فیلترینگ!" onclick="hidefilter();">
                     <?php
                 }
                 $this->loadfilter();
@@ -582,6 +645,9 @@ class makeform
                                 }
                                 if ($this->formtype[$j] == 2) {
                                     $item = $this->sqlint($_GET[$this->formname[$j]]);
+                                }
+                                if ($this->formtype[$j] == 5) {
+                                    $item = "'" . $this->sqlstr($_GET[$this->formname[$j]]) . "'";
                                 }
                                 if ($fi == "") {
                                     $fi = " `" . $this->formname[$j] . "` = $item";
@@ -611,6 +677,13 @@ class makeform
                         if ($this->formtbl[$i] == 1) {
                             if ($this->formtype[$i] == 2) {
                                 $restbl .= "<td class='w3-right-align'>" . $this->selectvals[$this->formname[$i]][$fild[$this->formname[$i]]] . "</td>";
+                            } elseif ($this->formtype[$i] == 5) {
+                                $year = substr($fild[$this->formname[$i]], 0, 4);
+                                $month = substr($fild[$this->formname[$i]], 5, 2);
+                                $day = substr($fild[$this->formname[$i]], 8, 2);
+                                $jdate = gregorian_to_jalali($year, $month, $day);
+                                $jfdate = $jdate[0] . "-" . $jdate[1] . "-" . $jdate[2];
+                                $restbl .= "<td class='w3-right-align'>" . $jfdate . "</td>";
                             } else {
                                 $restbl .= "<td class='w3-right-align'>" . $fild[$this->formname[$i]] . "</td>";
                             }
@@ -631,13 +704,13 @@ class makeform
                 }
                 $restbl .= "</table>";
                 echo($restbl);
-            } elseif
-            ($_GET['action'] == 'editform' && $this->alow_edit == true) {
+            } elseif ($_GET['action'] == 'editform' && $this->alow_edit == true) {
                 if ($this->alow_visit == true) {
                     ?><a href="<?php $fl = new filemg();
                     echo($fl->getfilename()); ?>?action=show"><input type="button"
                                                                      class="w3-btn w3-blue w3-round w3-margin"
-                                                                     value="مشاهده"></a><?php
+                                                                     value="مشاهده"></a>
+                    <?php
                 }
                 echo($this->all);
                 $setval = $_GET[$this->setkey];
@@ -675,6 +748,9 @@ class makeform
                         if (is_numeric(strpos($this->form_action, "action=addquery")) == true) {
                             $resscript .= "document.getElementsByTagName('form')[0].action='" . $fl->getfilename() . "?action=editquery&" . $this->setkey . "=" . $setval . "';";
                         }
+                        if ($this->formtype[$i] == 5) {
+                            $resscript .= "miladibeshamsi('" . $this->formname[$i] . "');";
+                        }
                     }
                     $resscript .= "</script>";
                     echo($resscript);
@@ -694,7 +770,19 @@ class makeform
                         $db->addtoedit($this->formname[$i], $thisvar);
                         for ($j = 0; $j < sizeof($this->not_in_name); $j++) {
                             if ($this->formname[$i] == $this->not_in_name[$j]) {
-                                $sqlcheck = "select * from `" . $this->not_in_table[$this->not_in_name[$j]] . "` where `" . $this->not_in_fild[$this->not_in_name[$j]] . "`=$thisvar";
+                                $keyval = "";
+                                if ($this->setkey_type == 0) {
+                                    $keyval = "'" . $this->sqlstr($_GET[$this->setkey]) . "'";
+                                } elseif ($this->setkey_type == 1) {
+                                    $keyval = $this->sqlint($_GET[$this->setkey]);
+                                } elseif ($this->setkey_type == 2) {
+                                    $keyval = $this->sqlint($_GET[$this->setkey]);
+                                    if ($keyval != 0 && $keyval != 1) {
+                                        die();
+                                    }
+                                }
+                                $reskey = " and `$this->setkey`!=$keyval";
+                                $sqlcheck = "select * from `" . $this->not_in_table[$this->not_in_name[$j]] . "` where `" . $this->not_in_fild[$this->not_in_name[$j]] . "`=$thisvar $reskey";
                                 $db2 = new database();
                                 $db2->connect()->query($sqlcheck);
                                 if (mysqli_num_rows($db2->res) > 0) {
@@ -828,12 +916,30 @@ class makeform
                                     $thisvar = "'" . $newplace . "'";
                                     $db->addtoedit($this->formname[$i], $thisvar);
                                 } else {
-                                    msgb("حجم فایل " . $this->formtitle[$i] . " بیشتر از 6 مگابایت می باشد.");
+                                    $msg->msgb("حجم فایل " . $this->formtitle[$i] . " بیشتر از 6 مگابایت می باشد.");
                                 }
                             } else {
-                                msgb("فرمت فایل " . $this->formtitle[$i] . " پشتیبانی نمی شود.");
+                                $msg->msgb("فرمت فایل " . $this->formtitle[$i] . " پشتیبانی نمی شود.");
                             }
                         }
+                    } elseif ($this->formtype[$i] == 5) {
+                        $msg = new message();
+                        $thisvar = $this->sqlstr($_POST[$this->formname[$i]]);
+                        if (strlen($thisvar) != 10) {
+                            $msg->msgb("اشکال در ورودی " . $this->formtitle[$i]);
+                            die();
+                        }
+                        $tmptst = str_replace("-", "", $thisvar);
+                        if (strlen($tmptst) != 8) {
+                            $msg->msgb("اشکال در ورودی " . $this->formtitle[$i]);
+                            die();
+                        }
+                        $tmptst = $this->sqlint($tmptst);
+                        $d = strtotime($thisvar);
+                        $d = date("Y-m-d", $d);
+                        $thisvar = "'$d'";
+                        $db->addtoedit($this->formname[$i], $thisvar);
+
                     }
                 }
 
@@ -885,7 +991,6 @@ class makeform
                 $countarray = sizeof($this->selects) - 1;
             }
             $this->selectvals += array($this->selects[$countarray] => $this->sel_val);
-
         }
         $this->sel_val = [];
         $this->formname[sizeof($this->formname)] = $name;
@@ -941,6 +1046,8 @@ class makeform
                         $fm->selectaddval($fild[$this->formname[$i]], $this->selectvals[$this->formname[$i]][$fild[$this->formname[$i]]]);
                     }
                     $fm->end();
+                } elseif ($this->formtype[$i] == 5) {
+                    $fm->dateinput($this->formname[$i], $this->formtitle[$i]);
                 }
             }
         }
@@ -1089,8 +1196,6 @@ class makeform
             ->inpclasses("w3-btn w3-green w3-margin w3-round")
             ->end();
     }
-
-
 }
 
 ?>

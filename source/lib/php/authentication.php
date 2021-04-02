@@ -8,6 +8,8 @@
  */
 class loginpg
 {
+    public $inputclass = "";
+    public $btnsubmit = "";
 
     public function loginform()
     {
@@ -16,25 +18,41 @@ class loginpg
         $fm->alow_edit = false;
         $fm->alow_visit = false;
         $fm->alow_add = true;
-        $fm->label("نام کاربری", "w3-text-green")
+        $fm->all .= '<div class="form-group">';
+        $fm->label("نام کاربری")
             ->input()
             ->inpid("user")
             ->inpname("user")
-            ->inpclasses("w3-input w3-border")
-            ->inptype("text")
-            ->end();
-        $fm->label("کلمه عبور", "w3-text-green")
+            ->inptype("text");
+        if ($this->inputclass == "") {
+            $fm->inpclasses("w3-input w3-border");
+        } else {
+            $fm->inpclasses($this->inputclass);
+        }
+        $fm->end();
+        $fm->all .= '</div>';
+        $fm->all .= '<div class="form-group">';
+        $fm->label("کلمه عبور")
             ->input()
             ->inpname("pass")
-            ->inpid("pass")
-            ->inpclasses("w3-input w3-border")
-            ->inptype("password")
+            ->inpid("pass");
+        if ($this->inputclass == "") {
+            $fm->inpclasses("w3-input w3-border");
+        } else {
+            $fm->inpclasses($this->inputclass);
+        }
+        $fm->inptype("password")
             ->end();
-        $fm->input()
-            ->inptype("submit")
-            ->inpval("ورود")
-            ->inpclasses("w3-btn w3-green w3-round w3-margin")
-            ->end();
+        $fm->all .= '</div>';
+        if ($this->btnsubmit == "") {
+            $fm->input()
+                ->inptype("submit")
+                ->inpval("ورود")
+                ->inpclasses("w3-btn w3-green w3-round w3-margin")
+                ->end();
+        } else {
+            $fm->all .= $this->btnsubmit;
+        }
         $fm->addform("post", "?action=loginquery")->end();
         $fm->show();
     }
