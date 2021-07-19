@@ -128,7 +128,7 @@ class makeform
     }
 
     ///////////////////////////date input
-    public function dateinput($name, $title, $req = 0, $show_in_tbl = 0, $filter = 0)
+    public function dateinput($name, $title, $req = 0, $show_in_tbl = 0, $filter = 0, $class = "")
     {
         $this->input()
             ->inptype("hidden")
@@ -145,7 +145,7 @@ class makeform
             ->onkeypress("shamsibemiladi('" . $name . "')")
             ->onkeydown("shamsibemiladi('" . $name . "')")
             ->onkeyup("shamsibemiladi('" . $name . "')")
-            ->inpclasses("w3-input w3-border ta" . $name)
+            ->inpclasses("w3-input w3-border ta" . $name . " " . $class)
             ->end();
         //$this->all .= '<img id="btnta' . $name . '" src="../lib/js/cal/cal.png" style="vertical-align: top; float:left;" />';
         $this->all .= '<script type="text/javascript">
@@ -621,6 +621,7 @@ class makeform
                     <?php
                 }
                 $this->loadfilter();
+
                 $restbl = "<table border='1' class='w3-table w3-striped' style='width: 100%;'><tr>";
                 for ($i = 0; $i < sizeof($this->formtbl); $i++) {
                     if ($this->formtbl[$i] == 1) {
@@ -632,6 +633,8 @@ class makeform
 
                 $db = new database();
                 $fi = "";
+                $flm = new filemg();
+                $thispage = $flm->getfilename() . "?action=show";
                 for ($j = 0; $j < sizeof($this->formfilter); $j++) {
                     if ($this->formfilter[$j] == 1) {
                         if (isset($_GET[$this->formname[$j]]) == true) {
@@ -654,6 +657,7 @@ class makeform
                                 } else {
                                     $fi .= " and `" . $this->formname[$j] . "` = $item";
                                 }
+                                $thispage = $this->addtothispage($thispage, $this->formname[$j], $_GET[$this->formname[$j]]);
                             }
                         }
                     }
@@ -670,8 +674,11 @@ class makeform
                 }
                 $sql = "select * from `$this->settable` $fi";
                 $db->connect()->query($sql);
+                $arrthis = $this->pageslist(mysqli_num_rows($db->res), $thispage, $sql);
+                $dbres = $arrthis['res'];
+                $resbtn = $arrthis['resbtn'];
                 $fl = new filemg();
-                while ($fild = mysqli_fetch_assoc($db->res)) {
+                while ($fild = mysqli_fetch_assoc($dbres)) {
                     $restbl .= "<tr>";
                     for ($i = 0; $i < sizeof($this->formtbl); $i++) {
                         if ($this->formtbl[$i] == 1) {
@@ -702,7 +709,7 @@ class makeform
                     $restbl .= "</td>";
                     $restbl .= "</tr>";
                 }
-                $restbl .= "</table>";
+                $restbl .= "</table><div style='width: 100%; text-align: center; margin-top: 20px;'>" . $resbtn . "</div>";
                 echo($restbl);
             } elseif ($_GET['action'] == 'editform' && $this->alow_edit == true) {
                 if ($this->alow_visit == true) {
@@ -1043,7 +1050,9 @@ class makeform
                     $db->connect()->query($sql);
                     $fm->selectaddval("", "انتخاب مقدار");
                     while ($fild = mysqli_fetch_assoc(($db->res))) {
-                        $fm->selectaddval($fild[$this->formname[$i]], $this->selectvals[$this->formname[$i]][$fild[$this->formname[$i]]]);
+                        if (isset($this->formname[$i]) == true && isset($this->selectvals[$this->formname[$i]][$fild[$this->formname[$i]]]) == true) {
+                            $fm->selectaddval($fild[$this->formname[$i]], $this->selectvals[$this->formname[$i]][$fild[$this->formname[$i]]]);
+                        }
                     }
                     $fm->end();
                 } elseif ($this->formtype[$i] == 5) {
@@ -1195,6 +1204,50 @@ class makeform
             ->inpval("ثبت")
             ->inpclasses("w3-btn w3-green w3-margin w3-round")
             ->end();
+    }
+
+    public function addtothispage($thispage, $param, $val)
+    {
+        if (is_numeric(strpos($thispage, "?")) == true && strpos($thispage, "?") != -1) {
+            $thispage .= "&$param=$val";
+        } else {
+            $thispage .= "?$param=$val";
+        }
+        return $thispage;
+    }
+
+    public function pageslist($countitems, $thisurl, $sql)
+    {
+        $pagecount = floor($countitems / 10);
+        if (fmod($countitems, 10) > 0 && $countitems > 10) {
+            $pagecount++;
+        }
+        $retarr['pagecount'] = $pagecount;
+        $resbtn = "";
+        for ($i = 1; $i <= $pagecount; $i++) {
+            $newfi = "";
+            $urlbtn = $this->addtothispage($thisurl, 'limit', $i);
+            $resbtn .= "<input type='button' value='" . $i . "' onclick='location.replace(" . '"' . $urlbtn . '"' . ");'>";
+        }
+        $retarr['resbtn'] = $resbtn;
+        $limit = 0;
+        if (isset($_GET['limit']) == true) {
+            $fm = new makeform();
+            $limit = $fm->sqlint($_GET['limit']);
+            if ($limit == 0 || $limit == 1) {
+                $limit = 0;
+            }
+            if ($limit > 1) {
+                $limit--;
+                $limit = $limit * 10;
+            }
+        }
+        $sqllimit = " limit $limit,10";
+        $sql = "$sql $sqllimit";
+        $db = new database();
+        $db->connect()->query($sql);
+        $retarr['res'] = $db->res;
+        return $retarr;
     }
 }
 
