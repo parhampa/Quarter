@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: ormazd
@@ -12,8 +13,28 @@ class filemg
         /*$directory = str_replace("/", "\\", $_SERVER['SCRIPT_FILENAME']);
         $cfile = str_replace(getcwd(), "", $directory);
         $cfile = str_replace("\\", "", $cfile);*/
-        $cfile=basename($_SERVER['SCRIPT_NAME']);
+        $cfile = basename($_SERVER['SCRIPT_NAME']);
         return $cfile;
+    }
+
+    public function del_file($file)
+    {
+        if (file_exists($file)) {
+            unlink($file);
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
+function getpic($pic)
+{
+    if ($pic != "") {
+        $pic = str_replace("../", $GLOBALS["web_url"], $pic);
+        echo($pic);
+    } else {
+        echo("images/no-image.png");
     }
 }
 

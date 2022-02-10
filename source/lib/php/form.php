@@ -19,6 +19,7 @@
 
 class makeform
 {
+    public $includeplc = "";
     public $alow_add = true;
     public $alow_del = true;
     public $alow_edit = true;
@@ -41,6 +42,12 @@ class makeform
     public function input()
     {
         $this->maked .= '<input >';
+        return $this;
+    }
+
+    public function setInclude($file)
+    {
+        $this->includeplc = $file;
         return $this;
     }
 
@@ -270,6 +277,12 @@ class makeform
     public function label($val, $class = "")
     {
         $this->maked .= "<label class='" . $class . "'>" . $val . "</label>";
+        return $this;
+    }
+
+    public function add_to_select_btn($link)
+    {
+        $this->maked .= " <a href='$link' target='_blank' style='text-decoration: none; color: #007ED1; font-weight: bold; font-size: 18px;'>+</a>";
         return $this;
     }
 
@@ -622,7 +635,7 @@ class makeform
                 }
                 $this->loadfilter();
 
-                $restbl = "<table border='1' class='w3-table w3-striped' style='width: 100%;'><tr>";
+                $restbl = "<div style='width: 100%; overflow: scroll;'><table border='1' class='w3-table w3-striped' style='width: 100%;'><tr>";
                 for ($i = 0; $i < sizeof($this->formtbl); $i++) {
                     if ($this->formtbl[$i] == 1) {
                         $restbl .= "<th class='w3-right-align'>" . $this->formtitle[$i] . "</th>";
@@ -706,10 +719,14 @@ class makeform
                     if ($this->option_td_include != "") {
                         include($this->option_td_include);
                     }
+                    if ($this->includeplc != "") {
+                        $tmpkey = $fild[$this->setkey];
+                        include($this->includeplc);
+                    }
                     $restbl .= "</td>";
                     $restbl .= "</tr>";
                 }
-                $restbl .= "</table><div style='width: 100%; text-align: center; margin-top: 20px;'>" . $resbtn . "</div>";
+                $restbl .= "</table></div><div style='width: 100%; text-align: center; margin-top: 20px;'>" . $resbtn . "</div>";
                 echo($restbl);
             } elseif ($_GET['action'] == 'editform' && $this->alow_edit == true) {
                 if ($this->alow_visit == true) {

@@ -26,13 +26,12 @@ class database
 
     public function query($sql)
     {
-        //die($sql);
         mysqli_query($this->connection, "SET NAME utf8");
         mysqli_set_charset($this->connection, 'utf8');
         $this->res = mysqli_query($this->connection, $sql);
         if (!$this->res) {
             echo("خطا در اجرای کوئری!!!");
-            //die($sql);
+            die($sql);
         }
         return $this;
     }
