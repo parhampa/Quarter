@@ -26,6 +26,14 @@ class filemg
             return false;
         }
     }
+
+    public function ADDtoFile($txt, $file)
+    {
+        $myfile = fopen($file, "w") or die("Unable to open file!");
+        fwrite($myfile, $txt);
+        fclose($myfile);
+        return $this;
+    }
 }
 
 function getpic($pic)
@@ -37,6 +45,7 @@ function getpic($pic)
         echo("images/no-image.png");
     }
 }
+
 
 /*$fl = new filemg();
 echo($fl->getfilename());*/
