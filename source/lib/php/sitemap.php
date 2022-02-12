@@ -23,7 +23,7 @@ class sitemap
         return $this;
     }
 
-    public function lastmod($lastmod)
+    public function Setlastmod($lastmod)
     {
         $this->lastmod = $lastmod;
         return $this;
@@ -63,6 +63,66 @@ class sitemap
     {
         $fl = new filemg();
         $fl->ADDtoFile($this->res, $this->fileaddr);
+        return $this;
+    }
+
+    private $paramval = [];
+    private $paramname = [];
+    private $url = "";
+
+    public function SetParamVal($param, $val)
+    {
+        $this->paramname[sizeof($this->paramname)] = $param;
+        $this->paramval[sizeof($this->paramval)] = $val;
+        return $this;
+    }
+
+    public function SetURL($var)
+    {
+        $this->url = $var;
+        return $this;
+    }
+
+    public $tbl = "";
+
+    public function SetTBL($tbl)
+    {
+        $this->tbl = $tbl;
+        return $this;
+    }
+
+    public function AddFromTBL($orderby, $lastmod = "")
+    {
+        $tbl = $this->tbl;
+        $sql = "select * from `$tbl` order by `$orderby` desc limit 0,1000";
+        $db = new database();
+        $db->connect()->query($sql);
+        while ($fild = mysqli_fetch_assoc($db->res)) {
+            $newurl = $this->url . "?";
+            for ($i = 0; $i < sizeof($this->paramname); $i++) {
+                $paramval = $fild[$this->paramval[$i]];
+                if (is_numeric($paramval) == false) {
+                    $str = new stringjob();
+                    $paramval = $str->clean_space($paramval);
+                }
+                if ($i == 0) {
+                    $newurl .= $this->paramname[$i] . "=" . $paramval;
+                } else {
+                    $newurl .= "&" . $this->paramname[$i] . "=" . $paramval;
+                }
+            }
+            $this->SetLoc($newurl);
+            if ($lastmod != "") {
+                $this->Setlastmod($fild[$lastmod]);
+            } else {
+                $this->Setlastmod(date("Y-m-d"));
+            }
+            $this->SetChangeFreq("daily");
+            $this->SetPriority("0.9");
+        }
+        $this->AddToSitemap();
+        $this->paramval = [];
+        $this->paramname = [];
         return $this;
     }
 }

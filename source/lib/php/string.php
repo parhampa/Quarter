@@ -559,6 +559,11 @@ class stringjob
         $res = str_replace(" ", "-", $str);
         return $res;
     }
+
+    public function MakeUnicode($txt)
+    {
+        return mb_convert_encoding($txt, 'UTF-16LE', 'UTF-8');
+    }
 }
 
 /*

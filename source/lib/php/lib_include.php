@@ -17,5 +17,6 @@ include("mob_input.php");
 include("date_and_time.php");
 include("string.php");
 include("json.php");
+include("sitemap.php");
 include("../config.php");
 ?>
