@@ -19,7 +19,7 @@ class sitemap
 
     public function SetLoc($var)
     {
-        $this->loc = $var;
+        $this->loc = trim($var);
         return $this;
     }
 
@@ -123,6 +123,13 @@ class sitemap
         $this->AddToSitemap();
         $this->paramval = [];
         $this->paramname = [];
+        return $this;
+    }
+
+    public function MakeAndWriteSitemap()
+    {
+        $this->MakeSitemap();
+        $this->WriteSitemap();
         return $this;
     }
 }
