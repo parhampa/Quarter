@@ -46,6 +46,64 @@ class makejs
         }
         echo($result);
     }
+
+
+    /////////////////json database
+    private $jsres = "";
+    private $full_json = "";
+
+    public function add_single_to_js($varname, $varval)
+    {
+        $tmpjs = '"' . $varname . '":"' . $varval . '"';
+        if ($this->jsres != "") {
+            $this->jsres .= "," . $tmpjs;
+        } else {
+            $this->jsres = $tmpjs;
+        }
+        return $this;
+    }
+
+    public function ad_singles()
+    {
+        if ($this->full_json != "") {
+            $this->full_json .= "," . $this->jsres;
+        } else {
+            $this->full_json = $this->jsres;
+        }
+    }
+
+    private $json_objects = "";
+
+    public function make_object()
+    {
+        $tmp = "{" . $this->jsres . "}";
+        if ($this->json_objects != "") {
+            $this->json_objects .= "," . $tmp;
+        } else {
+            $this->json_objects = $tmp;
+        }
+        $this->jsres = "";
+        return $this;
+    }
+
+    public function add_objects($name)
+    {
+        $tmp = '"' . $name . '":[' . $this->json_objects . ']';
+        if ($this->full_json != "") {
+            $this->full_json .= "," . $tmp;
+        } else {
+            $this->full_json = $tmp;
+        }
+        $this->json_objects = "";
+    }
+
+    public function endjson()
+    {
+        $this->full_json = "{" . $this->full_json . "}";
+        return $this;
+    }
+
+
 }
 
 ?>
