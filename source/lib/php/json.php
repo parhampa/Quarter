@@ -63,13 +63,15 @@ class makejs
         return $this;
     }
 
-    public function ad_singles()
+    public function add_singles()
     {
         if ($this->full_json != "") {
             $this->full_json .= "," . $this->jsres;
         } else {
             $this->full_json = $this->jsres;
         }
+        $this->jsres = "";
+        return $this;
     }
 
     private $json_objects = "";
@@ -95,6 +97,7 @@ class makejs
             $this->full_json = $tmp;
         }
         $this->json_objects = "";
+        return $this;
     }
 
     public function endjson()
@@ -103,6 +106,64 @@ class makejs
         return $this;
     }
 
+    private $json_sql = "";
+
+    public function set_sql($sql)
+    {
+        $this->json_sql = $sql;
+        return $this;
+    }
+
+    private $fildnames = [];
+
+    public function add_fild($name)
+    {
+        $this->fildnames[sizeof($this->fildnames)] = $name;
+        return $this;
+    }
+
+    public function select_single()
+    {
+        $db = new database();
+        $db->connect()->query($this->json_sql);
+        //var_dump($db);
+        if (mysqli_num_rows($db->res) == 1) {
+
+            $fild = mysqli_fetch_assoc($db->res);
+            for ($i = 0; $i < sizeof($this->fildnames); $i++) {
+                $this->add_single_to_js($this->fildnames[$i], $fild[$this->fildnames[$i]]);
+            }
+            $this->add_singles();
+        }
+        /*else{
+           in ghesmat ro hatman tasmim begir che konim
+        }*/
+        $this->fildnames = [];
+        return $this;
+    }
+
+    public function select_multi($name)
+    {
+        $db = new database();
+        $db->connect()->query($this->json_sql);
+        if (mysqli_num_rows($db->res) != 0) {
+            while ($fild = mysqli_fetch_assoc($db->res)) {
+                for ($i = 0; $i < sizeof($this->fildnames); $i++) {
+                    $this->add_single_to_js($this->fildnames[$i], $fild[$this->fildnames[$i]]);
+                }
+                $this->make_object();
+            }
+        }
+        $this->add_objects($name);
+        $this->fildnames = [];
+        return $this;
+    }
+
+    public function show()
+    {
+        echo($this->full_json);
+        return $this;
+    }
 
 }
 
