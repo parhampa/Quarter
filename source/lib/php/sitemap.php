@@ -119,8 +119,9 @@ class sitemap
             }
             $this->SetChangeFreq("daily");
             $this->SetPriority("0.9");
+            $this->AddToSitemap();
         }
-        $this->AddToSitemap();
+
         $this->paramval = [];
         $this->paramname = [];
         return $this;

@@ -50,11 +50,11 @@ class makejs
 
     /////////////////json database
     private $jsres = "";
-    private $full_json = "";
+    public $full_json = "";
 
     public function add_single_to_js($varname, $varval)
     {
-        $tmpjs = '"' . $varname . '":"' . $varval . '"';
+        $tmpjs = '"' . $varname . '":"' . preg_replace('/\s\s+/', " ", preg_replace("/<br>|\n/", " ", $varval)) . '"';
         if ($this->jsres != "") {
             $this->jsres .= "," . $tmpjs;
         } else {
@@ -128,7 +128,6 @@ class makejs
         $db->connect()->query($this->json_sql);
         //var_dump($db);
         if (mysqli_num_rows($db->res) == 1) {
-
             $fild = mysqli_fetch_assoc($db->res);
             for ($i = 0; $i < sizeof($this->fildnames); $i++) {
                 $this->add_single_to_js($this->fildnames[$i], $fild[$this->fildnames[$i]]);
@@ -167,4 +166,15 @@ class makejs
 
 }
 
+/*$js = new makejs();
+$js->set_sql("select * from `asnaf` where `id`=2")
+    ->add_fild("title")
+    ->add_fild("pic1")
+    ->select_single()
+    ->set_sql("select * from `asnaf`")
+    ->add_fild("id")
+    ->add_fild("title")
+    ->select_multi("more")
+    ->endjson()
+    ->show();*/
 ?>

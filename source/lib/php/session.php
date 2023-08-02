@@ -8,11 +8,24 @@
  */
 class ses
 {
-    public function check_session($tbl, $ses_name, $active_name, $where, $pm)
+    public function check_session($tbl, $ses_name, $active_name, $where, $pm, $showpm = 0)
     {
         $msg = new message();
         if (isset($_SESSION[$ses_name]) == false) {
-            $msg->msg($pm, $where);
+            if ($showpm == 0) {
+                //$msg->msg($pm, $where);
+                ?>
+                <script>
+                    location.replace("<?php echo($where); ?>")
+                </script>
+                <?php
+            } else {
+                ?>
+                <script>
+                    location.replace("<?php echo($where); ?>")
+                </script>
+                <?php
+            }
             die();
         }
         $sesval = $_SESSION[$ses_name];
@@ -20,7 +33,15 @@ class ses
         $db = new database();
         $db->connect()->query($sql);
         if (mysqli_num_rows($db->res) == 0) {
-            $msg->msg($pm, $where);
+            if ($showpm == 0) {
+                $msg->msg($pm, $where);
+            } else {
+                ?>
+                <script>
+                    location.replace("<?php echo($where); ?>")
+                </script>
+                <?php
+            }
             die();
         }
     }

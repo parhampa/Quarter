@@ -8,9 +8,9 @@
  */
 class mobile_input
 {
-    function json_msg($msg)
+    function json_msg($msg, $code = 0)
     {
-        echo('{"msg":"' . $msg . '"}');
+        echo('{"msg":"' . $msg . '","mcode":"' . $code . '"}');
         return $this;
     }
 

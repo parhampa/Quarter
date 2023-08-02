@@ -55,7 +55,7 @@ class makeform
     {
         $this->maked = str_replace('<input ', '<input type="' . $vall . '" ', $this->maked);
         if ($vall == "file") {
-            $this->maked .= "<img src='' style='width: 300px; margin-top:5px;'>";
+            $this->maked .= "<img src='' style='width: 200px; margin-top:5px;'>";
         }
         return $this;
     }
@@ -75,6 +75,12 @@ class makeform
     public function inpclasses($vall)
     {
         $this->maked = str_replace('<input ', '<input class="' . $vall . '" ', $this->maked);
+        return $this;
+    }
+
+    public function inpstyles($vall)
+    {
+        $this->maked = str_replace('<input ', '<input style="' . $vall . '" ', $this->maked);
         return $this;
     }
 
@@ -176,6 +182,12 @@ class makeform
     public function areaval($vall)
     {
         $this->maked = str_replace('</textarea>', $vall . '</textarea>', $this->maked);
+        return $this;
+    }
+
+    public function areaplaceholder($vall)
+    {
+        $this->maked = str_replace('<textarea ', '<textarea placeholder="' . $vall . '" ', $this->maked);
         return $this;
     }
 
@@ -553,9 +565,11 @@ class makeform
                         if (in_array($_FILES[$this->formname[$i]]['type'], $allowedMimes)) {
                             if ($_FILES[$this->formname[$i]]['size'] < 6600000) {
 
-                                $newname = "uploads/" . md5(date("Y-m-d h:i:sa")) . $_FILES[$this->formname[$i]]['name'];
+                                $newname = "uploads/" . md5(date("Y-m-d h:i:sa")) . $this->sqlstrfile($_FILES[$this->formname[$i]]['name']);
                                 $newplace = "../" . $newname;
                                 move_uploaded_file($_FILES[$this->formname[$i]]['tmp_name'], $newplace);
+                                $fld = new filemg();
+                                $fld->compressjpg("../" . $newname, 1);
                                 $fsize = $_FILES[$this->formname[$i]]['size'];
                                 $thisvar = "'" . $newplace . "'";
                                 $db->addtoparam($this->formname[$i], $thisvar);
@@ -618,10 +632,14 @@ class makeform
                         }
                     }
                 </script>
-                <a href="<?php $fl = new filemg();
-                echo($fl->getfilename()); ?>"><input type="button" class="w3-btn w3-green w3-round w3-margin"
-                                                     value="+افزودن"></a>
                 <?php
+                if ($this->alow_add != false) {
+                    ?>
+                    <a href="<?php $fl = new filemg();
+                    echo($fl->getfilename()); ?>"><input type="button" class="w3-btn w3-green w3-round w3-margin"
+                                                         value="+افزودن"></a>
+                    <?php
+                }
                 $have_filter = 0;
                 for ($i = 0; $i < sizeof($this->formfilter); $i++) {
                     if ($this->formfilter[$i] == 1) {
@@ -630,7 +648,8 @@ class makeform
                 }
                 if ($have_filter > 0) {
                     ?>
-                    <input type="button" class="w3-btn w3-orange w3-round" value="فیلترینگ!" onclick="hidefilter();">
+                    <input type="button" class="w3-btn w3-orange w3-round" value="فیلترینگ!"
+                           onclick="hidefilter();">
                     <?php
                 }
                 $this->loadfilter();
@@ -933,9 +952,11 @@ class makeform
                             if (in_array($_FILES[$this->formname[$i]]['type'], $allowedMimes)) {
                                 if ($_FILES[$this->formname[$i]]['size'] < 6600000) {
 
-                                    $newname = "uploads/" . md5(date("Y-m-d h:i:sa")) . $_FILES[$this->formname[$i]]['name'];
+                                    $newname = "uploads/" . md5(date("Y-m-d h:i:sa")) . $this->sqlstrfile($_FILES[$this->formname[$i]]['name']);
                                     $newplace = "../" . $newname;
                                     move_uploaded_file($_FILES[$this->formname[$i]]['tmp_name'], $newplace);
+                                    $fld = new filemg();
+                                    $fld->compressjpg("../" . $newname, 1);
                                     $fsize = $_FILES[$this->formname[$i]]['size'];
                                     $thisvar = "'" . $newplace . "'";
                                     $db->addtoedit($this->formname[$i], $thisvar);
@@ -1007,7 +1028,8 @@ class makeform
         }
     }
 
-    public function sndform($name, $type, $req, $title, $show_tbl = 0, $filter = 0)
+    public
+    function sndform($name, $type, $req, $title, $show_tbl = 0, $filter = 0)
     {
         if (sizeof($this->selects) > 0) {
             $countarray = 0;
@@ -1026,7 +1048,8 @@ class makeform
         return $this;
     }
 
-    public function loadfilter()
+    public
+    function loadfilter()
     {
         $countfilter = 0;
         //$this->all = "";
@@ -1094,6 +1117,27 @@ class makeform
         }
     }
 
+    public function sqlstrfile($out)
+    {
+        if (is_array($out) == true) {
+            die();
+        }
+        $out = str_replace("'", "", $out);
+        $out = str_replace("*", "", $out);
+        $out = str_replace(",", "", $out);
+        $out = str_replace('"', "", $out);
+        $out = str_replace("&", "", $out);
+        $out = str_replace("%", "", $out);
+        $out = str_replace("(", "", $out);
+        $out = str_replace(")", "", $out);
+        //$out = str_replace("_", "&#" . ord("_") . ";", $out);
+        $out = str_replace('\\', "", $out);
+        $out = str_replace('|', "", $out);
+        $out = str_replace('<', "", $out);
+        $out = str_replace('>', "", $out);
+        return $out;
+    }
+
     public function sqlstr($out)
     {
         if (is_array($out) == true) {
@@ -1103,8 +1147,8 @@ class makeform
         $out = str_replace("*", "&#" . ord("*") . ";", $out);
         $out = str_replace(",", "&#" . ord(",") . ";", $out);
         $out = str_replace('"', "&#" . ord('"') . ";", $out);
-        $out = str_replace("&", "&#" . ord("&") . ";", $out);
-        $out = str_replace("%", "&#" . ord("%") . ";", $out);
+        //$out = str_replace("&", "&#" . ord("&") . ";", $out);
+        //$out = str_replace("%", "&#" . ord("%") . ";", $out);
         $out = str_replace("(", "&#" . ord("(") . ";", $out);
         $out = str_replace(")", "&#" . ord(")") . ";", $out);
         //$out = str_replace("_", "&#" . ord("_") . ";", $out);
@@ -1129,12 +1173,17 @@ class makeform
         }
     }
 
-    public $int_val_arr = [];
-    public $int_var_arr = [];
-    public $int_for_add = [];
-    public $int_for_edit = [];
+    public
+        $int_val_arr = [];
+    public
+        $int_var_arr = [];
+    public
+        $int_for_add = [];
+    public
+        $int_for_edit = [];
 
-    public function set_int_val($varname, $val, $for_add = true, $for_edit = true)
+    public
+    function set_int_val($varname, $val, $for_add = true, $for_edit = true)
     {
         $this->int_var_arr[sizeof($this->int_var_arr)] = $varname;
         $this->int_val_arr[sizeof($this->int_val_arr)] = $val;
@@ -1142,12 +1191,17 @@ class makeform
         $this->int_for_edit[sizeof($this->int_for_edit)] = $for_edit;
     }
 
-    public $str_val_arr = [];
-    public $str_var_arr = [];
-    public $str_for_add = [];
-    public $str_for_edit = [];
+    public
+        $str_val_arr = [];
+    public
+        $str_var_arr = [];
+    public
+        $str_for_add = [];
+    public
+        $str_for_edit = [];
 
-    public function set_str_val($varname, $val, $for_add = true, $for_edit = true)
+    public
+    function set_str_val($varname, $val, $for_add = true, $for_edit = true)
     {
         $this->str_var_arr[sizeof($this->str_var_arr)] = $varname;
         $this->str_val_arr[sizeof($this->str_val_arr)] = $val;
@@ -1155,7 +1209,8 @@ class makeform
         $this->str_for_edit[sizeof($this->str_for_edit)] = $for_edit;
     }
 
-    public function fast_number_input($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0)
+    public
+    function fast_number_input($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0)
     {
         if ($inpid == "") {
             $inpid = $inpname;
@@ -1170,7 +1225,8 @@ class makeform
             ->sndform($inpname, 1, $req, $lbl, $show_in_tbl, $filter);
     }
 
-    public function fast_string_input($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0)
+    public
+    function fast_string_input($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0, $val = "", $placeholder = "")
     {
         if ($inpid == "") {
             $inpid = $inpname;
@@ -1181,11 +1237,14 @@ class makeform
             ->inpname($inpname)
             ->inpid($inpid)
             ->inpclasses("w3-input w3-border")
+            ->inpval($val)
+            ->inpplaceholder($placeholder)
             ->end()
             ->sndform($inpname, 0, $req, $lbl, $show_in_tbl, $filter);
     }
 
-    public function fast_password_input($lbl, $inpname, $inpid = "")
+    public
+    function fast_password_input($lbl, $inpname, $inpid = "")
     {
         if ($inpid == "") {
             $inpid = $inpname;
@@ -1200,7 +1259,8 @@ class makeform
             ->sndform($inpname, 0, 1, $lbl);
     }
 
-    public function fast_textarea($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0)
+    public
+    function fast_textarea($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0)
     {
         if ($inpid == "") {
             $inpid = $inpname;
@@ -1214,7 +1274,8 @@ class makeform
             ->sndform($inpname, 0, $req, $lbl, $show_in_tbl, $filter);
     }
 
-    public function submit()
+    public
+    function submit()
     {
         $this->input()
             ->inptype("submit")
@@ -1223,7 +1284,8 @@ class makeform
             ->end();
     }
 
-    public function addtothispage($thispage, $param, $val)
+    public
+    function addtothispage($thispage, $param, $val)
     {
         if (is_numeric(strpos($thispage, "?")) == true && strpos($thispage, "?") != -1) {
             $thispage .= "&$param=$val";
@@ -1233,7 +1295,8 @@ class makeform
         return $thispage;
     }
 
-    public function pageslist($countitems, $thisurl, $sql)
+    public
+    function pageslist($countitems, $thisurl, $sql)
     {
         $pagecount = floor($countitems / 10);
         if (fmod($countitems, 10) > 0 && $countitems > 10) {

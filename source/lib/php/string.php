@@ -8,6 +8,16 @@ class stringjob
     public $count = [];
     public $keys = [];
 
+    public function IsInStr($main_str, $find_str)
+    {
+        $isther = strpos($main_str, $find_str);
+        if (is_numeric($isther) == false || $isther == -1) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     public function afterSTR()
     {
         $startplc = strpos($this->string, $this->start);
@@ -557,6 +567,8 @@ class stringjob
     public function clean_space($str)
     {
         $res = str_replace(" ", "-", $str);
+        $res = str_replace("|", "-", $res);
+        $res = str_replace("&#124;", "-", $res);
         return $res;
     }
 
