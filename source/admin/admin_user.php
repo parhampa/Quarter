@@ -5,7 +5,9 @@
  * Date: 8/25/2020
  * Time: 4:01 PM
  */
+session_start();
 include("../lib/php/lib_include.php");
+include("check_admin_session.php");
 ?>
 <!DOCTYPE html>
 <html>
@@ -52,6 +54,7 @@ include("nav.php");
         <?php
         $fm = new makeform();
         $fm->set_tbl_key("admin_user", "username", 0);
+        $fm->CSRF_token();
         $fm->label("نام کاربری", "w3-text-green")
             ->input()
             ->inpname("username")
