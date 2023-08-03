@@ -415,6 +415,22 @@ class makeform
                 }
                 echo($this->all);
             } elseif ($_GET['action'] == "addquery" && $this->alow_add == true) {
+                if (isset($_POST['csrf_token']) == false) {
+                    $msg = new message();
+                    $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
+                    die();
+                } else if (isset($_SESSION['csrf_token']) == false) {
+                    //die($_SESSION['csrf_token']);
+                    $msg = new message();
+                    $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
+                    die();
+                } else {
+                    if ($_SESSION['csrf_token'] != $_POST['csrf_token']) {
+                        $msg = new message();
+                        $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
+                        die();
+                    }
+                }
                 $db = new database();
                 for ($i = 0; $i < sizeof($this->formname); $i++) {
                     if ($this->formreq[$i] == 1 && (isset($_POST[$this->formname[$i]]) == false || $_POST[$this->formname[$i]] == "") && $this->formtype[$i] != 4) {
@@ -799,6 +815,22 @@ class makeform
                     echo($resscript);
                 }
             } elseif ($_GET['action'] == "editquery" && $this->alow_edit == true) {
+                if (isset($_POST['csrf_token']) == false) {
+                    $msg = new message();
+                    $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
+                    die();
+                } else if (isset($_SESSION['csrf_token']) == false) {
+                    //die($_SESSION['csrf_token']);
+                    $msg = new message();
+                    $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
+                    die();
+                } else {
+                    if ($_SESSION['csrf_token'] != $_POST['csrf_token']) {
+                        $msg = new message();
+                        $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
+                        die();
+                    }
+                }
                 $db = new database();
                 for ($i = 0; $i < sizeof($this->formname); $i++) {
 
@@ -1257,6 +1289,28 @@ class makeform
             ->inpclasses("w3-input w3-border")
             ->end()
             ->sndform($inpname, 0, 1, $lbl);
+    }
+
+    public function CSRF_token()
+    {
+        $rand = "";
+        if (isset($_GET['action']) == false) {
+            $_SESSION['csrf_token'] = md5(rand(100000000000000, 999999999999999) . date('m/d/Y h:i:s a', time()));
+            $rand = $_SESSION['csrf_token'];
+        }
+        if (isset($_GET['action']) == true) {
+            if ($_GET['action'] == "editform") {
+                $_SESSION['csrf_token'] = md5(rand(100000000000000, 999999999999999) . date('m/d/Y h:i:s a', time()));
+                $rand = $_SESSION['csrf_token'];
+            }
+        }
+        $this->input()
+            ->inptype("hidden")
+            ->inpname("csrf_token")
+            ->inpid("csrf_token")
+            ->inpval($rand)
+            ->end();
+
     }
 
     public
