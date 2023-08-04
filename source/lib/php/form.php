@@ -720,7 +720,7 @@ class makeform
                 if ($fi != "") {
                     $fi = " where $fi";
                 }
-                $sql = "select * from `$this->settable` $fi";
+                $sql = "select * from `$this->settable` $fi order by `$this->setkey` desc ";
                 $db->connect()->query($sql);
                 $arrthis = $this->pageslist(mysqli_num_rows($db->res), $thispage, $sql);
                 $dbres = $arrthis['res'];
@@ -749,7 +749,12 @@ class makeform
                         $restbl .= " <a href='" . $fl->getfilename() . "?action=editform&" . $this->setkey . "=" . $fild[$this->setkey] . "'><input type='button' value='ویرایش' class='w3-btn w3-blue w3-round'></a> ";
                     }
                     if ($this->alow_del == true) {
-                        $restbl .= " <a href='" . $fl->getfilename() . "?action=deletequery&" . $this->setkey . "=" . $fild[$this->setkey] . "'><input type='button' value='حذف' class='w3-btn w3-red w3-round'></a> ";
+                        $rand = "";
+                        if (isset($_GET['action']) == "show") {
+                            $_SESSION['csrf_token'] = md5(rand(100000000000000, 999999999999999) . date('m/d/Y h:i:s a', time()));
+                            $rand = $_SESSION['csrf_token'];
+                        }
+                        $restbl .= " <a href='" . $fl->getfilename() . "?action=deletequery&csrf_token=" . $rand . "&" . $this->setkey . "=" . $fild[$this->setkey] . "'><input type='button' value='حذف' class='w3-btn w3-red w3-round'></a> ";
                     }
                     if ($this->option_td_include != "") {
                         include($this->option_td_include);
@@ -1045,6 +1050,24 @@ class makeform
                 }
                 $db->update($this->settable, $this->setkey, $keyval, $this->after_edit_url, $this->where_edit);
             } elseif ($_GET['action'] == "deletequery" && $this->alow_del == true) {
+                if (isset($_GET['csrf_token']) == false) {
+                    $msg = new message();
+                    $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
+                    die();
+                } else if (isset($_SESSION['csrf_token']) == false) {
+                    //die($_SESSION['csrf_token']);
+                    $msg = new message();
+                    $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
+                    die();
+                } else {
+                    if ($_SESSION['csrf_token'] != $_GET['csrf_token']) {
+                        $msg = new message();
+                        $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
+                        die();
+                    }
+                }
+
+
                 $db = new database();
                 if (isset($_GET[$this->setkey]) == false) {
                     die();
