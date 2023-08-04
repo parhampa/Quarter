@@ -12,7 +12,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 $host = "localhost";
 $database = "";
-$db_user = "";
+$db_user = "root";
 $db_pass = "";
 header_remove("X-Powered-By");
 header_remove("Server");
