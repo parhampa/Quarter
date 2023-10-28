@@ -31,6 +31,14 @@ class makejs
         return $this;
     }
 
+    public function cleanTXT($data)
+    {
+        $fm = new makeform();
+        $newdata = preg_replace('/\s\s+/', " ", preg_replace("/<br>|\n/", " ", $data));
+        $newdata = str_replace('"', "'", $newdata);
+        return str_replace('&#34;', "'", $newdata);
+    }
+
     public function select_info()
     {
         $db = new database();
