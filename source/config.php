@@ -11,9 +11,13 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 $host = "localhost";
-$database = "";
+$database = "quarter";
 $db_user = "root";
 $db_pass = "";
+$web_url = "http://localhost/quarter";
+$web_title = "quarter framework";
+$pay_bank = 0;
+$pay_wallet = 0;
 header_remove("X-Powered-By");
 header_remove("Server");
 ?>

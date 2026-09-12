@@ -1,0 +1,27 @@
+.btnplace {
+    width: 100%;
+    text-align: center;
+    padding: 5px;
+    direction: ltr;
+}
+
+.postpic {
+    width: 200px;
+}
+
+div.scrollmenu {
+    overflow: auto !important;
+    white-space: nowrap !important;
+}
+
+div.scrollmenu a {
+    display: inline-block !important;
+    color: white !important;
+    text-align: center !important;
+    padding: 14px !important;
+    text-decoration: none !important;
+}
+
+div.scrollmenu a:hover {
+    background-color: #777 !important;
+}

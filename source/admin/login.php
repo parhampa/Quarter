@@ -15,6 +15,7 @@ include("../lib/php/lib_include.php");
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="css/w3.css">
 <script src="../lib/js/jquery.js"></script>
+<script src="../lib/js/palib.js"></script>
 <script src="js/fnuser.js"></script>
 <script src="js/modal.js"></script>
 <style>
@@ -33,6 +34,7 @@ include("../lib/php/lib_include.php");
     <br>
     <br>
     <div style="width: 60%;margin-right: 20%;" id="sdive">
+	<img src="daminologo.png" style="width:50%; margin-right:25%;">
         <h3>ورود به پنل مدیریت</h3>
         <?php
         $lg = new loginpg();
@@ -44,7 +46,7 @@ include("../lib/php/lib_include.php");
     <h5>
         طراحی و پیاده سازی
         <span class="w3-text-green">
-            تیم نرم افزاری X4Y
+            تیم نرم افزاری damino
 	</span>
     </h5>
 </div>
