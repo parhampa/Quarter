@@ -51,7 +51,6 @@ class database
     public function addquery($table, $afterquery = "", $return_res = false)
     {
         $sql = "insert into `$table` ($this->addparam) VALUES ($this->addvalue)";
-
         $this->connect()->query($sql);
         $msg = new message();
         $fl = new filemg();

@@ -8,6 +8,31 @@
  */
 class date_man
 {
+    public function getPreviousDay_from_your_day($date_m)
+    {
+        // تبدیل تاریخ ورودی به شیء DateTime
+        $dateTime = new DateTime(date("Y-m-d"));
+
+        // کاهش یک روز از تاریخ
+
+        $dateTime->modify('-' . $date_m . ' day');
+
+        // برگرداندن تاریخ به فرمت Y-m-d
+        return $dateTime->format('Y-m-d');
+    }
+
+    public function getPreviousDay($date)
+    {
+        // تبدیل تاریخ ورودی به شیء DateTime
+        $dateTime = new DateTime($date);
+
+        // کاهش یک روز از تاریخ
+        $dateTime->modify('-1 day');
+
+        // برگرداندن تاریخ به فرمت Y-m-d
+        return $dateTime->format('Y-m-d');
+    }
+
     public function dif_date($first, $now)
     {
         $date1 = date_create($first);
@@ -42,11 +67,33 @@ class date_man
         }
 
     }
+
+    public function timeAgo(int $milliseconds): string {
+        $now = (int)(microtime(true) * 1000); // زمان فعلی به میلی‌ثانیه
+        $diff = $now - $milliseconds;
+
+        // اگر ورودی در آینده باشد، اختلاف را صفر در نظر می‌گیریم
+        if ($diff < 0) {
+            $diff = 0;
+        }
+
+        if ($diff < 60000) { // کمتر از ۱ دقیقه (۶۰٬۰۰۰ میلی‌ثانیه)
+            return "لحظاتی پیش";
+        } elseif ($diff < 3600000) { // کمتر از ۱ ساعت (۳٬۶۰۰٬۰۰۰ میلی‌ثانیه)
+            return "دقایقی پیش";
+        } elseif ($diff < 86400000) { // کمتر از ۱ روز (۸۶٬۴۰۰٬۰۰۰ میلی‌ثانیه)
+            return "ساعاتی پیش";
+        } else {
+            $days = floor($diff / 86400000);
+            return $days . " روز پیش";
+        }
+    }
 }
 
-function gregorian_to_jalali($gy, $gm, $gd, $mod='') {
+function gregorian_to_jalali($gy, $gm, $gd, $mod = '')
+{
     $g_d_m = array(0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334);
-    $gy2 = ($gm > 2)? ($gy + 1) : $gy;
+    $gy2 = ($gm > 2) ? ($gy + 1) : $gy;
     $days = 355666 + (365 * $gy) + ((int)(($gy2 + 3) / 4)) - ((int)(($gy2 + 99) / 100)) + ((int)(($gy2 + 399) / 400)) + $gd + $g_d_m[$gm - 1];
     $jy = -1595 + (33 * ((int)($days / 12053)));
     $days %= 12053;
@@ -59,16 +106,17 @@ function gregorian_to_jalali($gy, $gm, $gd, $mod='') {
     if ($days < 186) {
         $jm = 1 + (int)($days / 31);
         $jd = 1 + ($days % 31);
-    } else{
+    } else {
         $jm = 7 + (int)(($days - 186) / 30);
         $jd = 1 + (($days - 186) % 30);
     }
-    return ($mod == '')? array($jy, $jm, $jd) : $jy.$mod.$jm.$mod.$jd;
+    return ($mod == '') ? array($jy, $jm, $jd) : $jy . $mod . $jm . $mod . $jd;
 }
 
-function jalali_to_gregorian($jy, $jm, $jd, $mod='') {
+function jalali_to_gregorian($jy, $jm, $jd, $mod = '')
+{
     $jy += 1595;
-    $days = -355668 + (365 * $jy) + (((int)($jy / 33)) * 8) + ((int)((($jy % 33) + 3) / 4)) + $jd + (($jm < 7)? ($jm - 1) * 31 : (($jm - 7) * 30) + 186);
+    $days = -355668 + (365 * $jy) + (((int)($jy / 33)) * 8) + ((int)((($jy % 33) + 3) / 4)) + $jd + (($jm < 7) ? ($jm - 1) * 31 : (($jm - 7) * 30) + 186);
     $gy = 400 * ((int)($days / 146097));
     $days %= 146097;
     if ($days > 36524) {
@@ -83,9 +131,9 @@ function jalali_to_gregorian($jy, $jm, $jd, $mod='') {
         $days = ($days - 1) % 365;
     }
     $gd = $days + 1;
-    $sal_a = array(0, 31, (($gy % 4 == 0 and $gy % 100 != 0) or ($gy % 400 == 0))?29:28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
+    $sal_a = array(0, 31, (($gy % 4 == 0 and $gy % 100 != 0) or ($gy % 400 == 0)) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
     for ($gm = 0; $gm < 13 and $gd > $sal_a[$gm]; $gm++) $gd -= $sal_a[$gm];
-    return ($mod == '')? array($gy, $gm, $gd) : $gy.$mod.$gm.$mod.$gd;
+    return ($mod == '') ? array($gy, $gm, $gd) : $gy . $mod . $gm . $mod . $gd;
 }
 
 ?>

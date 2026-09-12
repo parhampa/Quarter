@@ -29,9 +29,21 @@ class filemg
 
     public function png2jpg($originalFile, $outputFile, $quality)
     {
-        $image = imagecreatefrompng($originalFile);
-        imagejpeg($image, $outputFile, $quality);
-        imagedestroy($image);
+        try {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $type = finfo_file($finfo, $originalFile);
+
+            if (isset($type) && in_array($type, array("image/png"))) {
+                $image = imagecreatefrompng($originalFile);
+                imagejpeg($image, $outputFile, $quality);
+                imagedestroy($image);
+            } else {
+                echo '';
+            }
+        } catch (Exception $e) {
+            echo("wrong file");
+        }
+
     }
 
     public function compressjpg($oldpic, $up = 0)
@@ -43,7 +55,11 @@ class filemg
                 $img = imagecreatefromjpeg($oldpic);   // load the image-to-be-saved
                 imagejpeg($img, $newpic, 50);
             } else {
-                $this->png2jpg($oldpic, $newpic, 50);
+                try {
+                    $this->png2jpg($oldpic, $newpic, 50);
+                } catch (Exception $e) {
+                    echo("wrong file");
+                }
             }
             $fl = new filemg();
             $fl->del_file($oldpic);// remove the old image
@@ -53,8 +69,12 @@ class filemg
         } else {
             $newpic = $oldpic;
 
-            if (str_replace(".png", "", $oldpic) == $oldpic) {
-                $img = imagecreatefromjpeg($oldpic);   // load the image-to-be-saved
+            if (str_replace(".png", "", $oldpic) == $oldpic && str_replace(".webp", "", $oldpic) == $oldpic) {
+                try {
+                    $img = imagecreatefromjpeg($oldpic);   // load the image-to-be-saved
+                } catch (Exception $e) {
+                    echo("wrong file");
+                }
                 //$this->imagejpeg($img, $newpic, 50);
             } else {
                 $this->png2jpg($oldpic, $newpic, 50);
@@ -101,6 +121,44 @@ class filemg
         return $out;
     }
 
+    public function deleteFileIfExists($filePath) {
+        if (file_exists($filePath)) {
+            unlink($filePath);
+            return true; // فایل با موفقیت حذف شد
+        }
+        return false; // فایل وجود ندارد
+    }
+
+    public function addToExcelFile($filePath, $id, $title, $txt) {
+        $data = [];
+
+        // بررسی وجود فایل
+        if (file_exists($filePath)) {
+            // اگر فایل وجود دارد، داده‌ها را بخوان
+            $file = fopen($filePath, 'r');
+            while (($line = fgetcsv($file)) !== FALSE) {
+                $data[] = $line;
+            }
+            fclose($file);
+        }
+
+        // اضافه کردن مقادیر جدید
+        if (empty($data)) {
+            // اگر فایل خالی است، عنوان‌ها را اضافه کن
+            $data[] = ['id', 'title', 'txt'];
+        }
+        $data[] = [$id, $title, $txt];
+
+        // نوشتن مجدد داده‌ها به فایل
+        $file = fopen($filePath, 'w');
+        foreach ($data as $row) {
+            fputcsv($file, $row);
+        }
+        fclose($file);
+
+        return true; // عملیات موفقیت‌آمیز
+    }
+
 }
 
 function getpic($pic)
@@ -113,6 +171,8 @@ function getpic($pic)
         echo($GLOBALS["web_url"] . "nopic.jpg");
     }
 }
+
+
 
 
 /*$fl = new filemg();

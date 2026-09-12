@@ -14,9 +14,15 @@ include("findin.php");
 include("modal.php");
 include("authentication.php");
 include("mob_input.php");
+include("selector.php");
 include("date_and_time.php");
 include("string.php");
 include("json.php");
+include("persian_date.php");
+include("captcha.php");
+include("act_log.php");
 //include("sitemap.php");
 include("../config.php");
+include("user_control.php");
+
 ?>

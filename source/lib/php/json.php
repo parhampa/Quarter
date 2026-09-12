@@ -34,8 +34,10 @@ class makejs
     public function cleanTXT($data)
     {
         $fm = new makeform();
-        $newdata = preg_replace('/\s\s+/', " ", preg_replace("/<br>|\n/", " ", $data));
+        $newdata = str_replace("\n", " mm435mm ", $data);
+        $newdata = preg_replace('/\s\s+/', " ", preg_replace("/<br>|\n/", " mm435mm ", $data));
         $newdata = str_replace('"', "'", $newdata);
+        $newdata = trim(preg_replace('/\t+/', '', $newdata));
         return str_replace('&#34;', "'", $newdata);
     }
 

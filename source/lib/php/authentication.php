@@ -51,7 +51,6 @@ class loginpg
             $fm->inpplaceholder("کلمه عبور");
             $fm->inpstyles("margin-top:5px;");
         }
-
         if ($this->inputclass == "") {
             $fm->inpclasses("w3-input w3-border");
         } else {
@@ -60,8 +59,8 @@ class loginpg
         $fm->inptype("password")
             ->end();
         $fm->all .= '</div>';
+        $fm->make_captcha("login", true);
         $fm->all .= "<div style='width: 100%; text-align: center;'>";
-        $fm->CSRF_token();
         if ($this->btnsubmit == "") {
             $fm->input()
                 ->inptype("submit")
@@ -75,7 +74,7 @@ class loginpg
         }
         if ($btnreg == 1) {
             $fm->input()
-                ->inptype("buttom")
+                ->inptype("button")
                 ->inpval("ثبت نام")
                 ->inpid("regbtn")
                 ->inpclasses("w3-btn w3-round w3-pink")
@@ -102,24 +101,16 @@ class loginpg
         $fm->alow_visit = false;
         $fm->alow_add = false;
         $ms = new message();
-
-        if (isset($_POST['csrf_token']) == false) {
-            $msg = new message();
-            $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
+        if (isset($_POST['inplogin']) == false) {
+            $ms->msgb("لطفا کد امنیتی را وارد نمایید.");
             die();
-        } else if (isset($_SESSION['csrf_token']) == false) {
-            //die($_SESSION['csrf_token']);
-            $msg = new message();
-            $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
-            die();
-        } else {
-            if ($_SESSION['csrf_token'] != $_POST['csrf_token']) {
-                $msg = new message();
-                $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
+        }
+        if (isset($_POST['inplogin']) == true) {
+            if ($_POST['inplogin'] != $_SESSION['login']) {
+                $ms->msgb("لطفا کد امنیتی را به صورت صحیح وارد نمایید.");
                 die();
             }
         }
-
         if (isset($_POST['user']) == false) {
             $ms->msgb("لطفا نام کاربری را وارد نمایید.");
             die();

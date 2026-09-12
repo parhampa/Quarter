@@ -43,6 +43,9 @@ class ses
                 <?php
             }
             die();
+        } else {
+            $fild = mysqli_fetch_assoc($db->res);
+            $_SESSION['act_user'] = $sesval;
         }
     }
 }

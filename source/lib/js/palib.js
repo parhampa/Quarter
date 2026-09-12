@@ -381,3 +381,15 @@ function txtreplace(item, full_text, ty = 0) {
     var res = txt.replace(item, inputtxt);
     return res;
 }
+
+function changecap(capname) {
+    var imgid = "imgplc" + capname;
+    var capcls = "cls" + capname;
+    postobj.send_type = "post";
+    postobj.post_url = "cap.php?capname=" + capname;
+    postobj.after_success = function (data) {
+        document.getElementById(imgid).src = data;
+    }
+
+    res_obj_postdata(capcls);
+}

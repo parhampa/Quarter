@@ -14,11 +14,14 @@
  * type 2 => numeric_select
  * type 3 => bool
  * type 4 => file
+ * type 666 => captcha
  * */
 
 
 class makeform
 {
+    public $csrftkn_name = "";
+    public $form_title = "";
     public $includeplc = "";
     public $alow_add = true;
     public $alow_del = true;
@@ -37,6 +40,8 @@ class makeform
 
     public $selects = [];
     public $sel_val = [];
+
+    private $capname = "";
 
     /////////////////////////////input
     public function input()
@@ -107,6 +112,12 @@ class makeform
     public function select_onchange($vall)
     {
         $this->maked = str_replace('<select ', '<select onchange="' . $vall . '" ', $this->maked);
+        return $this;
+    }
+
+    public function set_select_filter($from, $to, $file)
+    {
+        $this->maked = str_replace('<select ', '<select onchange="set_select_filter(' . "'" . $from . "','" . $to . "','" . $file . "')" . '" ', $this->maked);
         return $this;
     }
 
@@ -286,9 +297,15 @@ class makeform
     }
 
     //////////////////////////lable
-    public function label($val, $class = "")
+    public function label($val, $class = "", $add_function = "", $search_function = "")
     {
         $this->maked .= "<label class='" . $class . "'>" . $val . "</label>";
+        if ($add_function != "") {
+            $this->maked .= " <i class='fa fa-plus' onclick='$add_function'></i> ";
+        }
+        if ($search_function != "") {
+            $this->maked .= " <i class='fa fa-search' onclick='$search_function'></i> ";
+        }
         return $this;
     }
 
@@ -326,8 +343,9 @@ class makeform
     public $setkey = "";
     public $setkey_type = "";
 
-    public function set_tbl_key($tbl, $key, $key_type)
+    public function set_tbl_key($tbl, $key, $key_type, $form_title = " - ")
     {
+        $this->form_title = $form_title;
         $this->settable = $tbl;
         $this->setkey = $key;
         $this->setkey_type = $key_type;
@@ -395,6 +413,10 @@ class makeform
             die();
         }
         if (isset($_GET['action']) == false && $this->alow_add == true) {
+            if ($this->alow_add == true && isset($_SESSION['act_user']) == true) {
+                $at = new act_log();
+                $at->add($_SESSION['act_user'], $this->getScriptDirectoryName(), $this->getCallingFileName(), $this->form_title, "addform", "مشاهده فرم ثبت اطلاعات", $this->settable, $this->setkey, $this->setkey_type, "0", "-");
+            }
             if ($this->alow_visit == true) {
                 ?>
                 <a href="<?php $fl = new filemg();
@@ -403,8 +425,13 @@ class makeform
                 <?php
             }
             echo($this->all);
-        } elseif ($_GET['action'] == true) {
+        } elseif
+        ($_GET['action'] == true) {
             if ($_GET['action'] == "addform" && $this->alow_add == true) {
+                if ($this->alow_add == true && isset($_SESSION['act_user']) == true) {
+                    $at = new act_log();
+                    $at->add($_SESSION['act_user'], $this->getScriptDirectoryName(), $this->getCallingFileName(), $this->form_title, "addform", "مشاهده فرم ثبت اطلاعات", $this->settable, $this->setkey, $this->setkey_type, "0", "-");
+                }
                 if ($this->alow_visit == true) {
                     ?>
                     <a href="<?php $fl = new filemg();
@@ -415,20 +442,20 @@ class makeform
                 }
                 echo($this->all);
             } elseif ($_GET['action'] == "addquery" && $this->alow_add == true) {
-                if (isset($_POST['csrf_token']) == false) {
+                $this->chk_captcha();
+                if (isset($_POST[$_SESSION['sesname' . md5($this->form_title)]]) == false) {
                     $msg = new message();
                     $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
-                    die();
-                } else if (isset($_SESSION['csrf_token']) == false) {
-                    //die($_SESSION['csrf_token']);
+                    die($_SESSION['sesname' . md5($this->form_title)]);
+                } else if (isset($_SESSION[$_SESSION['sesname' . md5($this->form_title)]]) == false) {
                     $msg = new message();
                     $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
-                    die();
+                    die($_SESSION['sesname' . md5($this->form_title)]);
                 } else {
-                    if ($_SESSION['csrf_token'] != $_POST['csrf_token']) {
+                    if ($_SESSION[$_SESSION['sesname' . md5($this->form_title)]] != $_POST[$_SESSION['sesname' . md5($this->form_title)]]) {
                         $msg = new message();
                         $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
-                        die();
+                        die($_SESSION['sesname' . md5($this->form_title)]);
                     }
                 }
                 $db = new database();
@@ -575,7 +602,10 @@ class makeform
                             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                             'image/jpeg',
                             'image/png',
-                            'image/gif'
+                            'image/gif',
+                            'image/webp',
+                            'text/csv',
+                            'application/vnd.ms-excel'
                         ];
                         //if ($_FILES[$this->formname[$i]]['type'] != "") {
                         if (in_array($_FILES[$this->formname[$i]]['type'], $allowedMimes)) {
@@ -637,6 +667,14 @@ class makeform
                 }
 
                 $db->addquery($this->settable, $this->after_add_url);
+                if ($this->alow_add == true && isset($_SESSION['act_user']) == true) {
+                    $at = new act_log();
+                    $action_key = "0";
+                    if ($this->setkey_type == 1) {
+                        $action_key = mysqli_insert_id($db->connection);
+                    }
+                    $at->add($_SESSION['act_user'], $this->getScriptDirectoryName(), $this->getCallingFileName(), $this->form_title, "addquery", "ثبت اطلاعات جدید", $this->settable, $this->setkey, $this->setkey_type, $action_key, "-");
+                }
             } elseif ($_GET['action'] == "show" && $this->alow_visit == true) {
                 ?>
                 <script>
@@ -726,6 +764,19 @@ class makeform
                 $dbres = $arrthis['res'];
                 $resbtn = $arrthis['resbtn'];
                 $fl = new filemg();
+                $rand = "";
+                if (isset($_GET['action']) == "show") {
+                    if ($this->alow_visit == true && isset($_SESSION['act_user']) == true) {
+                        $at = new act_log();
+                        $at->add($_SESSION['act_user'], $this->getScriptDirectoryName(), $this->getCallingFileName(), $this->form_title, "show", "نمایش اطلاعات", $this->settable, $this->setkey, $this->setkey_type, "0", "-");
+                    }
+
+                    $rndname = md5(rand() . date("Y-m-d"));
+                    $sesname = "csrf_token" . $rndname;
+                    $_SESSION['sesname' . md5($this->form_title)] = $sesname;
+                    $_SESSION[$_SESSION['sesname' . md5($this->form_title)]] = md5(rand(100000000000000, 999999999999999) . date('m/d/Y h:i:s a', time()));
+                    $rand = $_SESSION[$_SESSION['sesname' . md5($this->form_title)]];
+                }
                 while ($fild = mysqli_fetch_assoc($dbres)) {
                     $restbl .= "<tr>";
                     for ($i = 0; $i < sizeof($this->formtbl); $i++) {
@@ -749,11 +800,6 @@ class makeform
                         $restbl .= " <a href='" . $fl->getfilename() . "?action=editform&" . $this->setkey . "=" . $fild[$this->setkey] . "'><input type='button' value='ویرایش' class='w3-btn w3-blue w3-round'></a> ";
                     }
                     if ($this->alow_del == true) {
-                        $rand = "";
-                        if (isset($_GET['action']) == "show") {
-                            $_SESSION['csrf_token'] = md5(rand(100000000000000, 999999999999999) . date('m/d/Y h:i:s a', time()));
-                            $rand = $_SESSION['csrf_token'];
-                        }
                         $restbl .= " <a href='" . $fl->getfilename() . "?action=deletequery&csrf_token=" . $rand . "&" . $this->setkey . "=" . $fild[$this->setkey] . "'><input type='button' value='حذف' class='w3-btn w3-red w3-round'></a> ";
                     }
                     if ($this->option_td_include != "") {
@@ -788,7 +834,10 @@ class makeform
                         die();
                     }
                 }
-
+                if ($this->alow_edit == true && isset($_SESSION['act_user']) == true) {
+                    $at = new act_log();
+                    $at->add($_SESSION['act_user'], $this->getScriptDirectoryName(), $this->getCallingFileName(), $this->form_title, "editform", "نمایش فرم ویرایش اطلاعات", $this->settable, $this->setkey, $this->setkey_type, $setval, "-");
+                }
                 $sql = "select * from `$this->settable` where `$this->setkey`='$setval' $this->where_edit";
                 $db = new database();
                 $db->connect()->query($sql);
@@ -820,20 +869,20 @@ class makeform
                     echo($resscript);
                 }
             } elseif ($_GET['action'] == "editquery" && $this->alow_edit == true) {
-                if (isset($_POST['csrf_token']) == false) {
+                $this->chk_captcha();
+                if (isset($_POST[$_SESSION['sesname' . md5($this->form_title)]]) == false) {
                     $msg = new message();
                     $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
-                    die();
-                } else if (isset($_SESSION['csrf_token']) == false) {
-                    //die($_SESSION['csrf_token']);
+                    die($_SESSION['sesname' . md5($this->form_title)]);
+                } else if (isset($_SESSION[$_SESSION['sesname' . md5($this->form_title)]]) == false) {
                     $msg = new message();
                     $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
-                    die();
+                    die($_SESSION['sesname' . md5($this->form_title)]);
                 } else {
-                    if ($_SESSION['csrf_token'] != $_POST['csrf_token']) {
+                    if ($_SESSION[$_SESSION['sesname' . md5($this->form_title)]] != $_POST[$_SESSION['sesname' . md5($this->form_title)]]) {
                         $msg = new message();
                         $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
-                        die();
+                        die($_SESSION['sesname' . md5($this->form_title)]);
                     }
                 }
                 $db = new database();
@@ -984,7 +1033,10 @@ class makeform
                                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                                 'image/jpeg',
                                 'image/png',
-                                'image/gif'
+                                'image/gif',
+                                'image/webp',
+                                'text/csv',
+                                'application/vnd.ms-excel'
                             ];
                             if (in_array($_FILES[$this->formname[$i]]['type'], $allowedMimes)) {
                                 if ($_FILES[$this->formname[$i]]['size'] < 6600000) {
@@ -1048,22 +1100,25 @@ class makeform
                         die();
                     }
                 }
+                if ($this->alow_edit == true && isset($_SESSION['act_user']) == true) {
+                    $at = new act_log();
+                    $at->add($_SESSION['act_user'], $this->getScriptDirectoryName(), $this->getCallingFileName(), $this->form_title, "editquery", "اعمال تغییرات در اطلاعات", $this->settable, $this->setkey, $this->setkey_type, $keyval, "-");
+                }
                 $db->update($this->settable, $this->setkey, $keyval, $this->after_edit_url, $this->where_edit);
             } elseif ($_GET['action'] == "deletequery" && $this->alow_del == true) {
                 if (isset($_GET['csrf_token']) == false) {
                     $msg = new message();
                     $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
-                    die();
-                } else if (isset($_SESSION['csrf_token']) == false) {
-                    //die($_SESSION['csrf_token']);
+                    die($_SESSION['sesname' . md5($this->form_title)]);
+                } else if (isset($_SESSION[$_SESSION['sesname' . md5($this->form_title)]]) == false) {
                     $msg = new message();
                     $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
-                    die();
+                    die($_SESSION['sesname' . md5($this->form_title)]);
                 } else {
-                    if ($_SESSION['csrf_token'] != $_GET['csrf_token']) {
+                    if ($_SESSION[$_SESSION['sesname' . md5($this->form_title)]] != $_GET['csrf_token']) {
                         $msg = new message();
                         $msg->msgb("کاربر گرامی درخواست شما قابل اجرا نمی باشد.");
-                        die();
+                        die($_SESSION['sesname' . md5($this->form_title)]);
                     }
                 }
 
@@ -1077,6 +1132,10 @@ class makeform
                     $id = "'" . $this->sqlstr($id) . "'";
                 } elseif ($this->setkey_type == 1) {
                     $id = $this->sqlint($id);
+                }
+                if ($this->alow_del == true && isset($_SESSION['act_user']) == true) {
+                    $at = new act_log();
+                    $at->add($_SESSION['act_user'], $this->getScriptDirectoryName(), $this->getCallingFileName(), $this->form_title, "deletequery", "حذف اطلاعات", $this->settable, $this->setkey, $this->setkey_type, $id, "-");
                 }
                 $db->deletequery($this->settable, $this->setkey, $id, $this->after_delete_url, $this->delwhere);
             }
@@ -1316,28 +1375,48 @@ class makeform
 
     public function CSRF_token()
     {
-        $rand = "";
         if (isset($_GET['action']) == false) {
-            $_SESSION['csrf_token'] = md5(rand(100000000000000, 999999999999999) . date('m/d/Y h:i:s a', time()));
-            $rand = $_SESSION['csrf_token'];
+            $rndname = md5(rand() . date("Y-m-d"));
+            $sesname = "csrf_token" . $rndname;
+            $_SESSION['sesname' . md5($this->form_title)] = $sesname;
+            $this->csrftkn_name = $sesname;
+            //$_SESSION['csrf_token'] = md5(rand(100000000000000, 999999999999999) . date('m/d/Y h:i:s a', time()));
+            $_SESSION[$this->csrftkn_name] = md5(rand(100000000000000, 999999999999999) . date('m/d/Y h:i:s a', time()));
+            //$rand = $_SESSION['csrf_token'];
+            $this->input()
+                ->inptype("hidden")
+                ->inpname($this->csrftkn_name)
+                ->inpid($this->csrftkn_name)
+                ->inpval($_SESSION[$this->csrftkn_name])
+                ->end();
         }
         if (isset($_GET['action']) == true) {
             if ($_GET['action'] == "editform") {
-                $_SESSION['csrf_token'] = md5(rand(100000000000000, 999999999999999) . date('m/d/Y h:i:s a', time()));
-                $rand = $_SESSION['csrf_token'];
+                $rndname = md5(rand() . date("Y-m-d"));
+                $sesname = "csrf_token" . $rndname;
+                $_SESSION['sesname' . md5($this->form_title)] = $sesname;
+                $this->csrftkn_name = $sesname;
+                //$_SESSION['csrf_token'] = md5(rand(100000000000000, 999999999999999) . date('m/d/Y h:i:s a', time()));
+                $_SESSION[$this->csrftkn_name] = md5(rand(100000000000000, 999999999999999) . date('m/d/Y h:i:s a', time()));
+                //$rand = $_SESSION['csrf_token'];
+                $this->input()
+                    ->inptype("hidden")
+                    ->inpname($this->csrftkn_name)
+                    ->inpid($this->csrftkn_name)
+                    ->inpval($_SESSION[$this->csrftkn_name])
+                    ->end();
             }
         }
-        $this->input()
+        /*$this->input()
             ->inptype("hidden")
             ->inpname("csrf_token")
             ->inpid("csrf_token")
             ->inpval($rand)
-            ->end();
+            ->end();*/
 
     }
 
-    public
-    function fast_textarea($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0)
+    public function fast_textarea($lbl, $inpname, $inpid = "", $req = 0, $show_in_tbl = 0, $filter = 0)
     {
         if ($inpid == "") {
             $inpid = $inpname;
@@ -1372,8 +1451,7 @@ class makeform
         return $thispage;
     }
 
-    public
-    function pageslist($countitems, $thisurl, $sql)
+    public function pageslist($countitems, $thisurl, $sql)
     {
         $pagecount = floor($countitems / 10);
         if (fmod($countitems, 10) > 0 && $countitems > 10) {
@@ -1384,7 +1462,7 @@ class makeform
         for ($i = 1; $i <= $pagecount; $i++) {
             $newfi = "";
             $urlbtn = $this->addtothispage($thisurl, 'limit', $i);
-            $resbtn .= "<input type='button' value='" . $i . "' onclick='location.replace(" . '"' . $urlbtn . '"' . ");'>";
+            $resbtn .= "<input class='w3-btn w3-gray' style='margin:2px;' type='button' value='" . $i . "' onclick='location.replace(" . '"' . $urlbtn . '"' . ");'>";
         }
         $retarr['resbtn'] = $resbtn;
         $limit = 0;
@@ -1406,6 +1484,85 @@ class makeform
         $retarr['res'] = $db->res;
         return $retarr;
     }
+
+
+    public function set_captcha($name)
+    {
+        $this->capname = $name;
+        return $this;
+    }
+
+    public function chk_captcha()
+    {
+        if ($this->capname != "") {
+            $inpcat = "inp" . $this->capname;
+            if (isset($_POST[$inpcat]) == false) {
+                $msg = new message();
+                $msg->msgb("کاربر گرامی لطفا تصویر امنیتی را وارد نمایید");
+                die();
+            } else {
+                if ($_POST[$inpcat] != $_SESSION[$this->capname]) {
+                    $msg = new message();
+                    $msg->msgb("کاربر گرامی لطفا تصویر امنیتی را صحیح وارد نمایید");
+                    die();
+                }
+            }
+        }
+    }
+
+    public function make_captcha($capname, $show_every_where = false, $label = "کد امنیتی:", $placeholder = "لطفا کد امینی را در این قسمت وارد نمایید")
+    {
+        $this->label($label, "w3-text-green")
+            ->end();
+        $this->all .= "<img id='imgplc" . $capname . "' src=''>";
+        $this->all .= "<input type='button' value='بروزرسانی' onclick='changecap(" . '"' . $capname . '"' . ")'>";
+        $inpname = "inp" . $capname;
+        $inpcls = "cls" . $inpname;
+        $this->input()
+            ->inpname($inpname)
+            ->inpid($inpname)
+            ->inptype("text")
+            ->inpplaceholder($placeholder)
+            ->inpclasses("w3-input w3-border")
+            ->end()
+            ->set_captcha($capname);
+        if (isset($_GET['action']) == false && $show_every_where == false) {
+            ?>
+            <script>
+                changecap("<?php echo($capname); ?>");
+            </script><?php
+        }
+        if (isset($_GET['action']) == true && $show_every_where == false) {
+            if ($_GET['action'] == "editform") {
+                ?>
+                <script>
+                    changecap("<?php echo($capname); ?>");
+                </script><?php
+            }
+        }
+        if ($show_every_where == true) {
+            ?>
+            <script>
+                changecap("<?php echo($capname); ?>");
+            </script><?php
+        }
+    }
+
+    function getScriptDirectoryName(): string
+    {
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+        $callerFile = $trace[1]['file'] ?? __FILE__;
+        return basename(dirname($callerFile));
+    }
+
+    function getCallingFileName(): string
+    {
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+        $callerFile = $trace[1]['file'] ?? __FILE__;
+        return basename($callerFile);
+    }
+
+
 }
 
 ?>
